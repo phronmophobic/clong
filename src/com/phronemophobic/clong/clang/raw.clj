@@ -1,4 +1,4 @@
-(ns com.phronemophobic.clong.coffi
+(ns com.phronemophobic.clong.clang.raw
   (:require [coffi.mem :as mem :refer [defalias]]
             [coffi.ffi :as ffi :refer [defcfn]]
             [clojure.string :as str]
@@ -111,7 +111,6 @@
 
 (defn def-fn* [f]
   `(do
-     (prn ~(:id f))
      (defcfn ~(symbol (:symbol f))
        ~(let [doc (:doc f)]
           (str
@@ -170,7 +169,6 @@
      ~(:value enum)))
 
 (defmacro def-enum [enum]
-  (prn enum)
   (def-enum* enum))
 (defmacro def-enums [enums]
   `(do
@@ -179,18 +177,18 @@
 
 (def-enums (:enums clang-api))
 
-(defonce index (clang_createIndex 0 0))
-(def null-pointer
-  (doto (mem/alloc-instance ::mem/pointer)
-    (mem/write-long 0)))
-(defonce translation-unit (clang_parseTranslationUnit index "/Users/adrian/workspace/clong/csource/align.c" null-pointer 0 null-pointer 0 0) )
-(def cursor (clang_getTranslationUnitCursor translation-unit))
-(defn get-children [cursor]
-  (let [childs (volatile! [])
-        visitor (fn [child parent _]
-                  (vswap! childs conj child)
-                  1)]
-    (clang_visitChildren cursor
-                         visitor
-                         null-pointer)
-    @childs))
+;; (defonce index (clang_createIndex 0 0))
+;; (def null-pointer
+;;   (doto (mem/alloc-instance ::mem/pointer)
+;;     (mem/write-long 0)))
+;; (defonce translation-unit (clang_parseTranslationUnit index "/Users/adrian/workspace/clong/csource/align.c" null-pointer 0 null-pointer 0 0) )
+;; (def cursor (clang_getTranslationUnitCursor translation-unit))
+;; (defn get-children [cursor]
+;;   (let [childs (volatile! [])
+;;         visitor (fn [child parent _]
+;;                   (vswap! childs conj child)
+;;                   1)]
+;;     (clang_visitChildren cursor
+;;                          visitor
+;;                          null-pointer)
+;;     @childs))y
