@@ -356,6 +356,9 @@
               (map (fn [cur]
                      {:name (py.- cur spelling)
                       :doc (py.- cur raw_comment)
+                      :enum (-> cur
+                          (py.- semantic_parent)
+                          (py.- spelling))
                       :value (py.- cur enum_value)}))))]
     {:functions function-decls
      :structs structs
