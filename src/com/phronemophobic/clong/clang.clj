@@ -2,6 +2,7 @@
   (:require [com.phronemophobic.clong.clang.jna.raw :as c]
             [clojure.string :as str]
             [loom.graph :as g]
+            [clojure.java.io :as io]
             [clojure.pprint :refer [pprint]]
             loom.alg))
 
@@ -249,7 +250,24 @@
         num-arguments (c/clang_Cursor_getNumArguments cur)]
     {:id (keyword fname)
      :symbol fname
-
+     :args (into []
+                 (comp
+                  (map (fn [i]
+                         (c/clang_Cursor_getArgument cur i)))
+                  (map (fn [arg]
+                         {:spelling (-> arg
+                                        c/clang_getCursorSpelling
+                                        c/clang_getCString)
+                          :type (-> arg
+                                    c/clang_getCursorType
+                                    c/clang_getCanonicalType
+                                    c/clang_getTypeSpelling
+                                    c/clang_getCString)})))
+                 (range num-arguments))
+     :ret {:spelling (-> (c/clang_getCursorResultType cur)
+                         c/clang_getCanonicalType
+                         c/clang_getTypeSpelling
+                         c/clang_getCString)}
      :function/args
      (into []
            (comp
@@ -312,7 +330,7 @@
      :size-in-bytes (c/clang_Type_getSizeOf stype)
      :fields (mapv field->map (get-fields stype))}))
 
-(defn parse-api [root]
+ (defn gen-api [root]
   (let [tree (->> (get-children root)
                   (map cursor-info)
                   doall)
@@ -351,7 +369,7 @@
 
         functions (->> tree
                  (filter function-decl?)
-                 (filter #(= c/CXLinkage_External
+                 (filter #(= "CXLinkage_External"
                              (:linkage %)))
                  doall)
 
@@ -361,7 +379,12 @@
      :enums enums}))
 
 
-
+(defn dump-clang-api []
+  (with-open [w (io/writer (io/file
+                            "resources" "clang-api.edn"))]
+    (write-edn w (gen-api
+                  (parse "/Users/adrian/workspace/llvm-project/build/out/include/clang-c/Index.h"
+                         ["-I/Users/adrian/workspace/llvm-project/build/out/include/"])))))
 
 (comment
 

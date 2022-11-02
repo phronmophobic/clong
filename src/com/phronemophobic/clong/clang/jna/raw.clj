@@ -306,7 +306,7 @@
              coercers#
              (doall (map coercer ~(:function/args f)))]
          (defn ~fn-name
-           ~(let [doc (:doc f)]
+           ~(let [doc (:raw-comment f)]
               (str
                (-> f :ret :spelling) " " (:name f) "("
                (str/join ", "
@@ -356,7 +356,7 @@
   `(def ~(-> enum
              :name
              symbol)
-     ~@(when-let [doc (:doc enum)]
+     ~@(when-let [doc (:raw-comment enum)]
          (when (not= doc "")
            [doc]))
      ~(:value enum)))
