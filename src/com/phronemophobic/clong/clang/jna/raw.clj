@@ -39,6 +39,6 @@
         (map (juxt :id identity))
         (:functions clang-api)))
 
-(gen/def-api libclang clang-api)
+(gen/def-api libclang (str "com.phronemophobic.clong.clang.jna.struct") clang-api)
 
 

@@ -35,7 +35,7 @@
 
 ;; ;; (defc dispatch_sync_f objlib void [queue context work])
 
-(defn coffi-type->insn-type [t]
+(defn coffi-type->insn-type [struct-prefix t]
   (case t
     :coffi.mem/char :byte
     :coffi.mem/short :short
@@ -54,7 +54,7 @@
         :coffi.ffi/fn com.sun.jna.Callback
         
         :coffi.mem/array
-        [(coffi-type->insn-type (second t))])
+        [(coffi-type->insn-type struct-prefix (second t))])
       
 
       (keyword? t)
@@ -65,12 +65,12 @@
         (reify
           insn-util/ClassDesc
           (class-desc [_]
-            (str "com/phronemophobic/clong/struct/" (name t)))
+            (str (str/replace struct-prefix #"\." "/") "/" (name t)))
           insn-util/TypeDesc
           (type-desc [_]
-            (str "Lcom/phronemophobic/clong/struct/" (name t) ";")))))))
+            (str "L" (str/replace struct-prefix #"\." "/") "/" (name t) ";")))))))
 
-(defn coffi-type->jna [t]
+(defn coffi-type->jna [struct-prefix t]
   (case t
     :coffi.mem/char Byte/TYPE
     :coffi.mem/short Short/TYPE
@@ -93,7 +93,7 @@
         :coffi.ffi/fn com.sun.jna.Callback
         
         :coffi.mem/array
-        (Class/forName (insn-util/type-desc [(coffi-type->insn-type (second t))])))
+        (Class/forName (insn-util/type-desc [(coffi-type->insn-type struct-prefix (second t))])))
 
       (keyword? t)
       (if (= "coffi.mem" (namespace t))
@@ -101,7 +101,7 @@
                         {:t t}))
         ;;else
         (Class/forName
-         (str "com.phronemophobic.clong.struct." (name t)))))))
+         (str struct-prefix "." (name t)))))))
 
 (defn coffi-type->initial-value [t]
   (when (and (vector? t)
@@ -125,15 +125,15 @@
   (swap! not-garbage conj x)
   x)
 
-(defn struct->class-def [struct]
+(defn struct->class-def [struct-prefix struct]
   (let [fields (:fields struct)]
-    {:name (symbol (str "com.phronemophobic.clong.struct." (name (:id struct))))
+    {:name (symbol (str struct-prefix "." (name (:id struct))))
      :super Structure
      :interfaces [Structure$ByValue]
      :flags #{:public}
      :fields (into []
                    (map (fn [field]
-                          (let [type (coffi-type->insn-type (:datatype field))]
+                          (let [type (coffi-type->insn-type struct-prefix (:datatype field))]
                             (merge
                              {:flags #{:public}
                               :name (:name field)
@@ -153,14 +153,14 @@
                                (= :coffi.mem/array (first t)))))
                 (mapcat (fn [{:keys [datatype name]}]
                           (let [[_ t size] datatype
-                                array-type (coffi-type->insn-type t)]
+                                array-type (coffi-type->insn-type struct-prefix t)]
                             [[:aload 0]
                              [:ldc size]
                              
                              (if (insn-util/array-type-keyword? array-type )
                                [:newarray array-type]
                                [:anewarray array-type])
-                             [:putfield :this name (coffi-type->insn-type datatype)]
+                             [:putfield :this name (coffi-type->insn-type struct-prefix datatype)]
                              ])))
                 fields)
 
@@ -170,29 +170,28 @@
      :annotations {com.sun.jna.Structure$FieldOrder
                    (mapv :name fields)}}))
 
-(defn def-struct [struct]
-  (let [class-data (struct->class-def struct)
+(defn def-struct [struct-prefix struct]
+  (let [class-data (struct->class-def struct-prefix struct)
         klass (insn/define class-data)]
     klass))
 
 ;; (run! def-struct (:structs clang-api))
 
-(defn make-callback-interface* [ret-type arg-types]
+(defn make-callback-interface* [struct-prefix ret-type arg-types]
   {:flags #{:public :interface}
    :interfaces [Callback] 
    :methods [{:flags #{:public :abstract}
               :name :callback
               :desc
-              (conj (mapv coffi-type->insn-type arg-types)
-                    (coffi-type->insn-type ret-type))}]})
+              (conj (mapv #(coffi-type->insn-type struct-prefix %) arg-types)
+                    (coffi-type->insn-type struct-prefix ret-type))}]})
 
-(defn make-callback-interface [ret-type arg-types]
-  (insn/define (make-callback-interface* ret-type arg-types)))
+(defn make-callback-interface [struct-prefix ret-type arg-types]
+  (insn/define (make-callback-interface* struct-prefix ret-type arg-types)))
 (def make-callback-interface-memo (memoize make-callback-interface))
 
-(def my-atom (atom false))
-(defn callback-maker* [ret-type arg-types]
-  (let [interface (make-callback-interface-memo ret-type arg-types)
+(defn callback-maker* [struct-prefix ret-type arg-types]
+  (let [interface (make-callback-interface-memo struct-prefix ret-type arg-types)
         args (map (fn [i] (symbol (str "x" i)))
                   (range (count arg-types)))]
     `(fn [f#]
@@ -202,17 +201,16 @@
           ~(symbol (.getName interface))
           (~'callback [this# ~@args]
            (.setContextClassLoader (Thread/currentThread) main-class-loader)
-           (reset! my-atom true)
            (f# ~@args)))))))
 
-(defn callback-maker [ret-type arg-types]
-  (eval (callback-maker* ret-type arg-types)))
+(defn callback-maker [struct-prefix ret-type arg-types]
+  (eval (callback-maker* struct-prefix ret-type arg-types)))
 
 (defn array? [o]
   (let [c (class o)]
     (.isArray c)))
 
-(defn coercer [t]
+(defn coercer [struct-prefix t]
   (case t
     :coffi.mem/char byte
     :coffi.mem/short short
@@ -232,11 +230,11 @@
     (cond
       (vector? t)
       (case (first t)
-        :coffi.mem/pointer (coercer :coffi.mem/pointer)
+        :coffi.mem/pointer (coercer struct-prefix :coffi.mem/pointer)
 
         :coffi.ffi/fn
         (let [->callback
-              (callback-maker (nth t 2) (nth t 1))]
+              (callback-maker struct-prefix (nth t 2) (nth t 1))]
           
           (fn [o]
             (if (instance? Callback o)
@@ -254,14 +252,14 @@
         (throw (ex-info "Unknown coffi type."
                         {:t t}))
         ;;else
-        (let [cls (Class/forName (str "com.phronemophobic.clong.struct." (name t)))]
+        (let [cls (Class/forName (str struct-prefix "." (name t)))]
           (fn [o]
             (when-not (instance? cls o)
-              (throw (ex-info (str "Must be a " "com.phronemophobic.clong.struct." (name t))
+              (throw (ex-info (str "Must be a " struct-prefix "." (name t))
                               {:o o})))
             o))))))
 
-(defn def-fn* [f]
+(defn def-fn* [struct-prefix f]
   (let [args (mapv (fn [arg]
                      (let [arg-name (:spelling arg)]
                        (symbol
@@ -276,10 +274,11 @@
         lib## (gensym "lib_")
 ]
     `(fn [~lib##]
-       (let [ret-type# (coffi-type->jna
-                        ~(:function/ret f))
+       (let [struct-prefix# ~struct-prefix
+             ret-type# (coffi-type->jna struct-prefix#
+                                        ~(:function/ret f))
              coercers#
-             (doall (map coercer ~(:function/args f)))]
+             (doall (map #(coercer struct-prefix# %) ~(:function/args f)))]
          (defn ~fn-name
            ~(let [doc (:raw-comment f)]
               (str
@@ -306,14 +305,8 @@
                   (mapv type args#)
                   args#)
              (.invoke ~cfn-sym
-                      ret-type# (to-array (map (fn [coerce# arg#]
-                                                 (coerce# arg#))
-                                               coercers#
-                                               ~args)))))))))
+                      ret-type# (to-array args#))))))))
 
-
-(defmacro def-fn [lib f]
-  (def-fn* lib f))
 
 (defn def-enum* [enum]
   `(def ~(-> enum
@@ -328,13 +321,14 @@
   (def-enum* enum))
 
 
-(defmacro def-api [lib api]
+(defmacro def-api [lib struct-prefix api]
   `(let [api# ~api
-         lib# ~lib]
+         lib# ~lib
+         struct-prefix# ~struct-prefix]
      (run! #(eval (def-enum* %))
            (:enums api#))
-     (run! def-struct (:structs api#))
-     (run! #((eval (def-fn* %)) lib#) (:functions api#))))
+     (run! #(def-struct struct-prefix# %) (:structs api#))
+     (run! #((eval (def-fn* struct-prefix# %)) lib#) (:functions api#))))
 
 
 (comment
