@@ -34,7 +34,7 @@
                       (subs struct-name (count "const "))
 
                       :else struct-name)]
-    (keyword "clang" struct-name)))
+    (keyword "clong" struct-name)))
 
 (defn coffi-integer-type [size]
   (case size

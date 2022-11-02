@@ -175,8 +175,6 @@
         klass (insn/define class-data)]
     klass))
 
-;; (run! def-struct (:structs clang-api))
-
 (defn make-callback-interface* [struct-prefix ret-type arg-types]
   {:flags #{:public :interface}
    :interfaces [Callback] 
