@@ -48,14 +48,6 @@
     4 :coffi.mem/float
     8 :coffi.mem/double))
 
-(clojure.pprint/pprint
- (->> (:enums c/clang-api)
-      (filter #(= "CXTypeKind"
-                  (:enum %)))
-      (map :name)
-      ))
-
-
 (defn get-argument-types [type]
   (into []
         (map (fn [i]
