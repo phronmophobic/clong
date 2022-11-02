@@ -168,9 +168,8 @@
                      (py.- type)
                      (py. get_canonical)
                      (py.- spelling))})
-        doc (py.- cursor raw_comment)]
+        raw-comment (py.- cursor raw_comment)]
     {:id (keyword fname)
-     :type :function
      :symbol fname
      :function/args
      (into []
@@ -181,10 +180,10 @@
      :function/ret (clang-type->coffi
                     ret-type)
      :args args
-    :ret ret
+     :ret ret
      :linkage (py.- cursor linkage)
      :name fname
-     :doc doc}))
+     :raw-comment raw-comment}))
 
 
 (def macro-decl-kind (py/get-attr cl/CursorKind "MACRO_DEFINITION"))
@@ -355,7 +354,7 @@
               (filter enum-decl?)
               (map (fn [cur]
                      {:name (py.- cur spelling)
-                      :doc (py.- cur raw_comment)
+                      :raw-comment (py.- cur raw_comment)
                       :enum (-> cur
                           (py.- semantic_parent)
                           (py.- spelling))
