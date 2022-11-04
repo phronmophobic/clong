@@ -204,7 +204,15 @@
 (defn ref! [o]
   (swap! handles conj o)
   o)
-(defn parse [fname args]
+(defn parse
+  "Returns a CXCursor.
+
+  Further processing can be done via the raw api  in com.phronemophobic.clong.clang.jna.raw. For basic usage, just use:
+  (->> (parse \"myheader.h\" default-arguments)
+       get-children
+       (map cursor-info))
+"
+  [fname args]
   (let [
 
         index (ref! (c/clang_createIndex 0 0))
