@@ -19,15 +19,16 @@
                  slipset/deps-deploy {:mvn/version "RELEASE"}}
           :ns-default build}
 
-  :project
-  {:extra-deps { ;;org.ow2.asm/asm {:mvn/version "9.4"}
-                nodisassemble/nodisassemble {:mvn/version "0.1.3"}}
-   :jvm-opts [;; "--add-modules" "jdk.incubator.foreign"
-              ;; "--enable-native-access=ALL-UNNAMED"
+  :libpython
+  {:jvm-opts ["--add-modules" "jdk.incubator.foreign"
+              "--enable-native-access=ALL-UNNAMED"
               "-Djava.library.path=../llvm-project/build/out/lib"
               "-Djna.library.path=../llvm-project/build/out/lib"
-              ;; "-Djava.library.path=../llvm-project/build/out/lib"
-                                        ;"-Xmx32G"
+
               ]
-   ;:jvm-cmd "/Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home/bin/java"
-   }}}
+   :jvm-cmd "/Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home/bin/java"
+   }
+
+  :project
+  {:extra-deps {nodisassemble/nodisassemble {:mvn/version "0.1.3"}}
+   :jvm-opts ["-Djna.library.path=../llvm-project/build/out/lib"]}}}
