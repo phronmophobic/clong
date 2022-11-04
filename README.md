@@ -79,7 +79,7 @@ The basic idea is to generate a description of the api with `easy-api` and gener
 - Add support for other ffi libraries besides jna.
 - Improve support for references. Currently, there is support for structs by reference, but not for references to structs by reference.
 - Implement clojure data interfaces over structs.
-
+- Support AOT of wrappers.
 ## License
 
 Copyright © 2022 Adrian
