@@ -4,7 +4,11 @@
             [loom.graph :as g]
             [clojure.java.io :as io]
             [clojure.pprint :refer [pprint]]
-            loom.alg))
+            loom.alg)
+  (:import java.io.PushbackReader
+           com.sun.jna.ptr.FloatByReference
+           com.sun.jna.ptr.IntByReference
+           com.sun.jna.ptr.PointerByReference))
 
 
 (defn write-edn [w obj]
@@ -40,28 +44,71 @@
    "-syslibroot"
    "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk"])
 
+(defn get-spelling-location [location]
+  (let [filep (PointerByReference.)
+        line (IntByReference.)
+        col (IntByReference.)
+        offset (IntByReference.)]
+    (c/clang_getSpellingLocation location filep line col offset)
+    (let [filename (-> (c/clang_getFileName (.getValue filep))
+                       (c/clang_getCString))]
+      {:line (.getValue line)
+       :file filename
+       :col (.getValue col)
+       :offset (.getValue offset)})))
+
+(defn get-spelling-extent [cur]
+  (let [extent (c/clang_getCursorExtent cur)
+        start-loc (-> extent
+                      c/clang_getRangeStart
+                      get-spelling-location)
+        end-loc (-> extent
+                    c/clang_getRangeStart
+                    get-spelling-location)]
+    {:file (:file start-loc)
+     :start start-loc
+     :end end-loc}))
+
+
+(declare field->map get-fields)
 (defn struct-type->id [type]
-  (let [struct-name (-> type
-                        (c/clang_getCanonicalType)
-                        (c/clang_getTypeSpelling)
-                        (c/clang_getCString))
-        struct-name (cond
+  (let [cur (c/clang_getTypeDeclaration type)
+        anonymous? (not (zero? (c/clang_Cursor_isAnonymous cur)))]
+    (if anonymous?
+      ;; negative hash numbers add hypens
+      (keyword "clong" (str "Struct_" (format "%X" (hash (mapv field->map (get-fields type)) ))))
+      (let [struct-name (-> type
+                            (c/clang_getCanonicalType)
+                            (c/clang_getTypeSpelling)
+                            (c/clang_getCString))
+            orig struct-name
+            struct-name (if (str/starts-with? struct-name "const ")
+                          (subs struct-name (count "const "))
+                          struct-name)
 
-                      (str/starts-with? struct-name "struct ")
-                      (subs struct-name (count "struct "))
+            struct-name (if (str/starts-with? struct-name "struct ")
+                          (subs struct-name (count "struct "))
+                          struct-name)]
+        (keyword "clong" struct-name)))))
 
-                      (str/starts-with? struct-name "const ")
-                      (subs struct-name (count "const "))
-
-                      :else struct-name)]
-    (keyword "clong" struct-name)))
+;; not sure this right
+(defn union-type? [t]
+  (let [t (c/clang_getCanonicalType t)]
+    (when (= c/CXType_Record (.kind t))
+      (let [fields (get-fields t)]
+        (and (pos? (count fields))
+             (every? zero?
+                     (map c/clang_Cursor_getOffsetOfField fields)))))))
 
 (defn coffi-integer-type [size]
   (case size
     1 :coffi.mem/char
     2 :coffi.mem/short
     4 :coffi.mem/int
-    8 :coffi.mem/long))
+    8 :coffi.mem/long
+    ;; not sure what to call this
+    16 :coffi.mem/longlong
+    ))
 
 (defn coffi-float-type [size]
   (case size
@@ -86,11 +133,11 @@
                               (clang-type->coffi
                                (c/clang_getArrayElementType type))
                               (c/clang_getArraySize type)]
-      ;; c/CXType_Bool
-      ;; c/CXType_Char_U
-      ;; c/CXType_UChar
-      ;; c/CXType_Char16
-      ;; c/CXType_Char32
+      c/CXType_Bool (coffi-integer-type (c/clang_Type_getSizeOf type))
+      c/CXType_Char_U (coffi-integer-type (c/clang_Type_getSizeOf type))
+      c/CXType_UChar (coffi-integer-type (c/clang_Type_getSizeOf type))
+      c/CXType_Char16 (coffi-integer-type (c/clang_Type_getSizeOf type))
+      c/CXType_Char32 (coffi-integer-type (c/clang_Type_getSizeOf type))
 
       c/CXType_UShort (coffi-integer-type (c/clang_Type_getSizeOf type))
       c/CXType_UInt (coffi-integer-type (c/clang_Type_getSizeOf type))
@@ -98,8 +145,8 @@
       c/CXType_ULongLong (coffi-integer-type (c/clang_Type_getSizeOf type))
       c/CXType_UInt128 (coffi-integer-type (c/clang_Type_getSizeOf type))
       c/CXType_Char_S (coffi-integer-type (c/clang_Type_getSizeOf type))
-      ;; c/CXType_SChar
-      ;; c/CXType_WChar)
+      c/CXType_SChar (coffi-integer-type (c/clang_Type_getSizeOf type))
+      c/CXType_WChar (coffi-integer-type (c/clang_Type_getSizeOf type))
       c/CXType_Short (coffi-integer-type (c/clang_Type_getSizeOf type))
       c/CXType_Int (coffi-integer-type (c/clang_Type_getSizeOf type))
       c/CXType_Long (coffi-integer-type (c/clang_Type_getSizeOf type))
@@ -124,22 +171,33 @@
 
                            (= c/CXType_FunctionProto
                               pointee-type-kind)
-                           [:coffi.ffi/fn
-                            (mapv clang-type->coffi
-                                  (get-argument-types pointee-type))
-                            (clang-type->coffi (c/clang_getResultType pointee-type))]
+                           (clang-type->coffi pointee-type)
 
                            :else
                            [:coffi.mem/pointer
                             (clang-type->coffi pointee-type)]))
 
-      ;; c/CXType_FunctionProto
+      c/CXType_FunctionProto
+      [:coffi.ffi/fn
+       (mapv clang-type->coffi
+             (get-argument-types type))
+       (clang-type->coffi (c/clang_getResultType type))]
+
+      c/CXType_IncompleteArray
+      :coffi.mem/pointer
 
       ;; objc block function pointer?
       c/CXType_BlockPointer [:coffi.mem/pointer]
 
-      c/CXType_Record (struct-type->id type)
-      c/CXType_Enum (coffi-integer-type (c/clang_Type_getSizeOf type)))))
+      c/CXType_Record
+      (if (union-type? type)
+        ;; pretend for now
+        [:coffi.mem/array :coffi.mem/char (c/clang_Type_getSizeOf type)]
+        (struct-type->id type))
+
+      c/CXType_Enum :coffi.mem/int
+
+      )))
 
 
 (defonce handles (atom #{}))
@@ -161,6 +219,7 @@
                                                        nil
                                                        0
                                                        options)
+        _ (assert translation-unit)
         cursor (ref!
                 (c/clang_getTranslationUnitCursor translation-unit))
         ]
@@ -174,6 +233,19 @@
                  (fn [child parent _]
                    (vswap! childs conj child)
                    c/CXChildVisit_Recurse))]
+    (c/clang_visitChildren cursor
+                           visitor
+                           nil)
+    (ref! @childs)
+    @childs))
+
+(defn get-immediate-children [cursor]
+
+  (let [childs (volatile! [])
+        visitor (ref!
+                 (fn [child parent _]
+                   (vswap! childs conj child)
+                   c/CXChildVisit_Continue))]
     (c/clang_visitChildren cursor
                            visitor
                            nil)
@@ -226,8 +298,13 @@
   {})
 
 (defn cursor-info [cur]
+  ;; (prn (:file (get-spelling-extent cur)))
   (merge
    {:kind (cursor-kind->str (.kind cur))
+    :spelling (c/clang_getCString
+               (c/clang_getCursorSpelling cur))
+    :cur cur
+    :location (get-spelling-extent cur)
     :type (cursor-type-kind->str (.kind (ref!
                                          (c/clang_getCursorType cur))))}
    (extra-cursor-info cur)))
@@ -254,12 +331,48 @@
   (= "CXCursor_FunctionDecl"
      (:kind cur)))
 
+(defonce get-source (memoize slurp))
+(defn get-snippet [cur]
+  (let [range (c/clang_getCursorExtent cur)
+        start-location (get-spelling-location
+                          (c/clang_getRangeStart range))
+          end-location (get-spelling-location(c/clang_getRangeEnd range))
+        snippet (when-let [filename (:file start-location)]
+                  (let [source (get-source filename)]
+                    (subs source
+                          (:offset start-location)
+                          (:offset end-location))))]
+    snippet))
+
+
+
+(comment
+  (defmethod extra-cursor-info "CXCursor_MacroDefinition"
+    [cur]
+    (let [snippet (get-snippet cur)]
+      {:spelling (c/clang_getCString
+                  (c/clang_getCursorSpelling cur))
+       :snippet snippet
+       :definition (-> cur
+                       (c/clang_getCursorDefinition)
+                       (c/clang_getCursorSpelling )
+                       (c/clang_getCString))
+       :children (->> (get-immediate-children cur)
+                      (map cursor-info))
+       :type (-> cur
+                 c/clang_getCursorType
+                 c/clang_getCanonicalType
+                 c/clang_getTypeSpelling
+                 c/clang_getCString)}
+
+      )))
+
 (defmethod extra-cursor-info "CXCursor_FunctionDecl"
   [cur]
-  (def my-cur cur)
   (let [fname (c/clang_getCString
                (c/clang_getCursorSpelling cur))
         num-arguments (c/clang_Cursor_getNumArguments cur)]
+    #_(prn fname)
     {:id (keyword fname)
      :symbol fname
      :args (into []
@@ -306,7 +419,7 @@
         visitor (ref!
                  (fn [child _]
                    (vswap! childs conj child)
-                   c/CXChildVisit_Recurse))]
+                   c/CXChildVisit_Continue))]
     (c/clang_Type_visitFields field-type
                               visitor
                               nil)
@@ -329,36 +442,40 @@
 
 (defmethod extra-cursor-info "CXCursor_StructDecl"
   [cur]
-
   (let [
         num-arguments (c/clang_Cursor_getNumArguments cur)
         stype (-> (c/clang_getCursorType cur)
                   c/clang_getCanonicalType)
+
         spelling (c/clang_getCString
-                  (c/clang_getTypeSpelling stype))]
-    {
+                  (c/clang_getTypeSpelling stype))
+        anonymous (not (zero? (c/clang_Cursor_isAnonymous cur)))]
+    #_(prn spelling (not (zero? (c/clang_equalCursors cur
+                                                    (c/clang_getCanonicalCursor cur))))
+         loc
+         (mapv field->map (get-fields stype)))
+    {:anonymous anonymous
      :id (struct-type->id stype)
      :spelling spelling
      :size-in-bytes (c/clang_Type_getSizeOf stype)
      :fields (mapv field->map (get-fields stype))}))
 
- (defn gen-api [root]
-  (let [tree (->> (get-children root)
-                  (map cursor-info)
-                  doall)
-
-        enums (->> tree
+(def enum-api-keys [:kind :spelling :type :name :value :enum :raw-comment])
+(def struct-api-keys [:kind :spelling :type :id :size-in-bytes :fields])
+(def function-api-keys [:args :ret :function/args :symbol :function/ret :type :linkage :id :raw-comment :kind :spelling])
+(defn gen-api [cursors]
+  (let [enums (->> cursors
                    (filter enum-decl?)
+                   (map #(select-keys % enum-api-keys))
                    doall)
 
-        structs-by-id (->> tree
+        structs-by-id (->> cursors
                            (filter struct-decl?)
+                           (map #(select-keys % struct-api-keys))
                            (into {}
                                  (map (fn [m]
                                         [(:id m)
                                          m]))))
-
-
 
         ;; sort topologically
         struct-g
@@ -379,72 +496,35 @@
         structs (->> (loom.alg/topsort struct-g)
                      (keep structs-by-id))
 
-        functions (->> tree
-                 (filter function-decl?)
-                 (filter #(= "CXLinkage_External"
-                             (:linkage %)))
-                 doall)
+        functions (->> cursors
+                       (filter function-decl?)
+                       (map #(select-keys % function-api-keys))
+                       (filter #(= "CXLinkage_External"
+                                   (:linkage %)))
+                       doall)
 
-]
+        ]
     {:functions functions
      :structs structs
      :enums enums}))
 
-
 (defn dump-clang-api []
   (with-open [w (io/writer (io/file
                             "resources" "clang-api.edn"))]
-    (write-edn w (gen-api
-                  (parse "/Users/adrian/workspace/llvm-project/build/out/include/clang-c/Index.h"
-                         ["-I/Users/adrian/workspace/llvm-project/build/out/include/"])))))
+    (write-edn w (->> (parse "/Users/adrian/workspace/llvm-project/build/out/include/clang-c/Index.h"
+                             (conj
+                              default-arguments
+                              "-I/Users/adrian/workspace/llvm-project/build/out/include/"))
+                      get-children
+                      (map cursor-info)
+                      (remove (fn [cur]
+                                (let [file (-> cur :location :file)]
+                                  (or (nil? file)
+                                      (str/starts-with? file
+                                                        "/Applications/Xcode.app")))))
+                      ;; remove forward declarations
+                      (remove (fn [cur]
+                                (and (struct-decl? cur)
+                                     (empty? (:fields cur)))))
+                      (gen-api)))))
 
-(comment
-
-  (def cursor (parse
-               "/Users/adrian/workspace/llvm-project/build/out/include/clang-c/Index.h"
-               ["-I/Users/adrian/workspace/llvm-project/build/out/include/"]))
-
-  #_(def cursor (parse
-               "/Users/adrian/workspace/clong/csource/align.c"
-               ["-I/Users/adrian/workspace/llvm-project/build/out/include/"]
-
-               ))
-
-  (dotimes [i 1000]
-    (c/clang_getCursorType cursor))
-
-  (def cursors (get-children cursor))
-
-  (def tree (->> (get-children cursor)
-                 (map cursor-info)))
-  
-
-  (def structs (->> tree
-                    (filter struct-decl?)))
-
-  (def structs-by-id
-    (into {}
-          (map (juxt :id identity))
-          structs))
-  
-
-
-  (def fns (->> tree
-                (filter function-decl?)))
-
-  (def fns-by-id
-    (into {}
-          (map (juxt :id identity))
-          fns))
-
-  (def enums
-    (->> tree
-         (filter enum-decl?)))
-
-
-  (def enums-by-id
-    (into {}
-          (map (juxt :name identity))
-          enums))
-  
-  ,)

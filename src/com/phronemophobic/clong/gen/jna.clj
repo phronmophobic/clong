@@ -4,16 +4,23 @@
             [insn.core :as insn]
             [clojure.pprint :refer [pprint]]
             [insn.util :as insn-util]
-            [no.disassemble.r :as r]
+            [com.rpl.specter :as specter]
             [clojure.edn :as edn])
   (:import java.io.PushbackReader
            com.sun.jna.Memory
            com.sun.jna.Pointer
+           com.sun.jna.PointerType
            com.sun.jna.Platform
-           com.sun.jna.ptr.FloatByReference
+           com.sun.jna.ptr.ByteByReference
+           com.sun.jna.ptr.ShortByReference
            com.sun.jna.ptr.IntByReference
+           com.sun.jna.ptr.LongByReference
+           com.sun.jna.ptr.FloatByReference
+           com.sun.jna.ptr.DoubleByReference
+           com.sun.jna.ptr.PointerByReference
            com.sun.jna.IntegerType
            com.sun.jna.Structure$ByValue
+           com.sun.jna.Structure$ByReference
            com.sun.jna.Structure
            com.sun.jna.Structure$FieldOrder
            com.sun.jna.Callback
@@ -49,9 +56,40 @@
     (cond
       (vector? t)
       (case (first t)
-        :coffi.mem/pointer Pointer
+        :coffi.mem/pointer
+        (let [ptype (second t)]
+          (case ptype
+            :coffi.mem/char ByteByReference
+            :coffi.mem/short ShortByReference
+            :coffi.mem/int IntByReference
+            :coffi.mem/long LongByReference
+            :coffi.mem/float FloatByReference
+            :coffi.mem/double DoubleByReference
+            :coffi.mem/pointer PointerByReference
 
-        :coffi.ffi/fn com.sun.jna.Callback
+            ;; else
+            (if-not (keyword ptype)
+              Pointer
+              (cond
+                (= ptype :coffi.mem/char)
+                String
+
+                (not= "coffi.mem"
+                      (namespace ptype))
+                (reify
+                  insn-util/ClassDesc
+                  (class-desc [_]
+                    (str (str/replace struct-prefix #"\." "/") "/" (name ptype) "/ByReference"))
+                  insn-util/TypeDesc
+                  (type-desc [_]
+                    (str "L" (str/replace struct-prefix #"\." "/") "/" (name ptype) "/ByReference;")))
+
+                :else Pointer))))
+
+
+        :coffi.ffi/fn Pointer
+        ;; Callback is abstract. Need specific type info to be useful
+        ;;com.sun.jna.Callback
         
         :coffi.mem/array
         [(coffi-type->insn-type struct-prefix (second t))])
@@ -88,9 +126,35 @@
 
       (vector? t)
       (case (first t)
-        :coffi.mem/pointer Pointer
+        :coffi.mem/pointer
+        (let [ptype (second t)]
+          (case ptype
+            :coffi.mem/char ByteByReference
+            :coffi.mem/short ShortByReference
+            :coffi.mem/int IntByReference
+            :coffi.mem/long LongByReference
+            :coffi.mem/float FloatByReference
+            :coffi.mem/double DoubleByReference
+            :coffi.mem/pointer PointerByReference
 
-        :coffi.ffi/fn com.sun.jna.Callback
+            ;; else
+            (if-not (keyword ptype)
+              Pointer
+              (cond
+                (= ptype :coffi.mem/char)
+                String
+
+                (not= "coffi.mem"
+                      (namespace ptype))
+                (try
+                  (Class/forName(str struct-prefix "." (name ptype) ".ByReference"))
+                  (catch java.lang.ClassNotFoundException e
+                    Pointer))
+
+                :else Pointer))))
+
+        :coffi.ffi/fn Pointer
+        ;;com.sun.jna.Callback
         
         :coffi.mem/array
         (Class/forName (insn-util/type-desc [(coffi-type->insn-type struct-prefix (second t))])))
@@ -103,19 +167,6 @@
         (Class/forName
          (str struct-prefix "." (name t)))))))
 
-(defn coffi-type->initial-value [t]
-  (when (and (vector? t)
-             (= :coffi.mem/array (first t)))
-    (let [[_ type size] t]
-      (case type
-        :coffi.mem/char (byte-array size)
-        :coffi.mem/short (short-array size)
-        :coffi.mem/int (int-array size)
-        :coffi.mem/long (long-array size)
-        :coffi.mem/float (float-array size)
-        :coffi.mem/double (double-array size)
-        :coffi.mem/pointer (object-array size)))))
-
 (defonce ^:no-doc not-garbage
   (atom []))
 
@@ -125,11 +176,12 @@
   (swap! not-garbage conj x)
   x)
 
-(defn struct->class-def [struct-prefix struct]
+(defn struct->class-def* [struct-prefix struct]
   (let [fields (:fields struct)]
-    {:name (symbol (str struct-prefix "." (name (:id struct))))
+    {
+     ;; :name (symbol (str struct-prefix "." (name (:id struct))))
+     ;; :interfaces [Structure$ByValue]
      :super Structure
-     :interfaces [Structure$ByValue]
      :flags #{:public}
      :fields (into []
                    (map (fn [field]
@@ -137,7 +189,6 @@
                             (merge
                              {:flags #{:public}
                               :name (:name field)
-                              ;; :type2 (insn-util/type-desc type)
                               :type type}))))
                    fields)
      :methods
@@ -170,16 +221,25 @@
      :annotations {com.sun.jna.Structure$FieldOrder
                    (mapv :name fields)}}))
 
+(defn struct->class-by-ref [struct-prefix struct]
+  (assoc (struct->class-def* struct-prefix struct)
+         :name (symbol (str struct-prefix "." (name (:id struct)) ".ByReference"))
+         :interfaces [Structure$ByReference]))
+
+(defn struct->class-by-value [struct-prefix struct]
+  (assoc (struct->class-def* struct-prefix struct)
+         :name (symbol (str struct-prefix "." (name (:id struct))))
+         :interfaces [Structure$ByValue]))
+
 (defn def-struct [struct-prefix struct]
-  (let [class-data (struct->class-def struct-prefix struct)
-        klass (insn/define class-data)]
-    klass))
+  (insn/define (struct->class-by-ref struct-prefix struct) )
+  (insn/define (struct->class-by-value struct-prefix struct) ))
 
 (defn make-callback-interface* [struct-prefix ret-type arg-types]
   {:flags #{:public :interface}
    :interfaces [Callback] 
    :methods [{:flags #{:public :abstract}
-              :name :callback
+              :name "callback"
               :desc
               (conj (mapv #(coffi-type->insn-type struct-prefix %) arg-types)
                     (coffi-type->insn-type struct-prefix ret-type))}]})
@@ -217,13 +277,19 @@
     :coffi.mem/float float    
     :coffi.mem/double double
     :coffi.mem/pointer (fn [o]
-                         (when-not (or (nil? o)
-                                       (string? o)
-                                       (array? o)
-                                       (instance? Pointer o))
+                         (cond
+                           (instance? com.sun.jna.Structure$ByReference o)
+                           (.getPointer o)
+
+                           (not (or (nil? o)
+                                    (string? o)
+                                    (array? o)
+                                    (instance? Pointer o)
+                                    (instance? PointerType o)))
                            (throw (ex-info "Must be a pointer"
-                                           {:o o})))
-                         o)
+                                             {:o o}))
+
+                           :else o))
 
     (cond
       (vector? t)
@@ -305,6 +371,51 @@
              (.invoke ~cfn-sym
                       ret-type# (to-array args#))))))))
 
+;; Where possible, we want to use MyStruct.ByReference
+;; to make the generated API easier to use.
+;; However, we can't use MyStruct.ByReference
+;; if MyStruct is a forward declaration
+;; and we don't actually know the size or fields.
+;; In those cases, we'll just use Pointer.
+(defn replace-forward-references [api]
+  (let [known-struct-types (->> api
+                                :structs
+                                (map :id)
+                                (into #{}))
+        function-types-path
+        [:functions
+         specter/ALL
+         (specter/multi-path
+          :function/ret
+          [:function/args specter/ALL])]
+
+        struct-types-path
+        [:structs
+         specter/ALL
+         :fields
+         specter/ALL
+         :datatype]
+
+        qualified-pointer-type?
+        (fn [t]
+          (and (vector? t)
+               (= :coffi.mem/pointer
+                  (first t))
+               (keyword (second t))
+
+               (not= "coffi.mem"
+                     (namespace (second t)))))
+
+        pointee-type (specter/nthpath 1)]
+    (specter/setval [(specter/multi-path function-types-path
+                                         struct-types-path)
+                     qualified-pointer-type?
+                     (fn [[_ pointee-type]]
+                       (not (contains? known-struct-types pointee-type)))]
+                    :coffi.mem/pointer
+                    api)))
+
+
 
 (defn def-enum* [enum]
   `(def ~(-> enum
@@ -313,14 +424,14 @@
      ~@(when-let [doc (:raw-comment enum)]
          (when (not= doc "")
            [doc]))
-     ~(:value enum)))
+     (int ~(:value enum))))
 
 (defmacro def-enum [enum]
   (def-enum* enum))
 
 
 (defmacro def-api [lib struct-prefix api]
-  `(let [api# ~api
+  `(let [api# (replace-forward-references ~api)
          lib# ~lib
          struct-prefix# ~struct-prefix]
      (run! #(eval (def-enum* %))

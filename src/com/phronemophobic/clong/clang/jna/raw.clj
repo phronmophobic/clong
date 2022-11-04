@@ -5,7 +5,6 @@
             [insn.core :as insn]
             [clojure.pprint :refer [pprint]]
             [insn.util :as insn-util]
-            [no.disassemble.r :as r]
             [clojure.edn :as edn])
   (:import java.io.PushbackReader
            com.sun.jna.Memory
@@ -24,8 +23,7 @@
   (com.sun.jna.NativeLibrary/getInstance "clang"))
 
 
-(def clang-api (with-open [rdr (io/reader (io/file "resources"
-                                                   "clang-api.edn"))
+(def clang-api (with-open [rdr (io/reader (io/resource "clang-api.edn"))
                            pbr (PushbackReader. rdr)]
                  (edn/read pbr)))
 
@@ -39,6 +37,6 @@
         (map (juxt :id identity))
         (:functions clang-api)))
 
-(gen/def-api libclang (str "com.phronemophobic.clong.clang.jna.struct") clang-api)
+(gen/def-api libclang "com.phronemophobic.clong.clang.jna.struct" clang-api)
 
 
