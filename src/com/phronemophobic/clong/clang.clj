@@ -460,6 +460,18 @@
      :size-in-bytes (c/clang_Type_getSizeOf stype)
      :fields (mapv field->map (get-fields stype))}))
 
+(def default-api-xforms
+  (comp (map cursor-info)
+        (remove (fn [cur]
+                  (let [file (-> cur :location :file)]
+                    (or (nil? file)
+                        (str/starts-with? file
+                                          "/Applications/Xcode.app")))))
+        ;; remove forward declarations
+        (remove (fn [cur]
+                  (and (struct-decl? cur)
+                       (empty? (:fields cur)))))))
+
 (def enum-api-keys [:kind :spelling :type :name :value :enum :raw-comment])
 (def struct-api-keys [:kind :spelling :type :id :size-in-bytes :fields])
 (def function-api-keys [:args :ret :function/args :symbol :function/ret :type :linkage :id :raw-comment :kind :spelling])
@@ -507,6 +519,13 @@
     {:functions functions
      :structs structs
      :enums enums}))
+
+(defn easy-api [header]
+  (->> (parse header
+              default-arguments)
+       get-children
+       (eduction default-api-xforms)
+       gen-api))
 
 (defn dump-clang-api []
   (with-open [w (io/writer (io/file

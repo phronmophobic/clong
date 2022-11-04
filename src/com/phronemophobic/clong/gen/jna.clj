@@ -430,14 +430,19 @@
   (def-enum* enum))
 
 
-(defmacro def-api [lib struct-prefix api]
-  `(let [api# (replace-forward-references ~api)
-         lib# ~lib
-         struct-prefix# ~struct-prefix]
-     (run! #(eval (def-enum* %))
-           (:enums api#))
-     (run! #(def-struct struct-prefix# %) (:structs api#))
-     (run! #((eval (def-fn* struct-prefix# %)) lib#) (:functions api#))))
+(defmacro def-api
+  ([lib api]
+   `(def-api ~lib ~api ~(str (munge (ns-name *ns*))
+                             "."
+                             "structs")))
+  ([lib api struct-prefix]
+   `(let [api# (replace-forward-references ~api)
+          lib# ~lib
+          struct-prefix# ~struct-prefix]
+      (run! #(eval (def-enum* %))
+            (:enums api#))
+      (run! #(def-struct struct-prefix# %) (:structs api#))
+      (run! #((eval (def-fn* struct-prefix# %)) lib#) (:functions api#)))))
 
 
 (comment
