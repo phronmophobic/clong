@@ -520,12 +520,14 @@
      :structs structs
      :enums enums}))
 
-(defn easy-api [header]
-  (->> (parse header
-              default-arguments)
-       get-children
-       (eduction default-api-xforms)
-       gen-api))
+(defn easy-api
+  ([header]
+   (easy-api header default-arguments))
+  ([header args]
+   (->> (parse header args)
+        get-children
+        (eduction default-api-xforms)
+        gen-api)))
 
 (defn dump-clang-api []
   (with-open [w (io/writer (io/file
