@@ -8,7 +8,7 @@ Currently, there is only a generator for clojure jna, but support for other ffi 
 
 ### Setup
 
-Parsing header files requires libclang to be available on the `jna.library.path`. You can set the `jna.library.path` with by adding the following to an alias:
+Parsing header files requires libclang to be available on the `jna.library.path`. You can set the `jna.library.path` by adding the following to an alias:
 ```
 :jvm-opts ["-Djna.library.path=/my/lib/path"]
 ```
@@ -17,7 +17,7 @@ Note: api wrapper generation does not require libclang.
 
 #### Obtaining libclang
 
-It's harder than it should be to acquire libclang. If you're on linux, there might be a package. I couldn't find one on for mac osx, but it was easy to build locally from https://github.com/llvm/llvm-project. I built the project with the following configuration:
+It's harder than it should be to acquire libclang. If you're on linux, there might be a package. I couldn't find one for mac osx, but it was easy to build locally from https://github.com/llvm/llvm-project. I built the project with the following configuration:
 
 ```
 mkdir build
@@ -29,7 +29,7 @@ make install
 
 ### Parsing
 
-`com.phronemophobic.clong.clang/parse` takes a header filename and the command line args to pass to clang. The most common command line args are `"-I/my/header/path"`. If you built clang locally, then you may also need to add system paths. You can see the system paths that you may need to by running `clang -### empty-file.h` from the command line.
+`com.phronemophobic.clong.clang/parse` takes a header filename and the command line args to pass to clang. The most common command line args are `"-I/my/header/path"`. If you built clang locally, then you may also need to add system paths. You can see the system paths that you may by running `clang -### empty-file.h` from the command line.
 
 `parse` returns a CXCursor. Further processing can be done via the raw api in `com.phronemophobic.clong.clang.jna.raw`. For basic usage, just use:
 ```clojure
