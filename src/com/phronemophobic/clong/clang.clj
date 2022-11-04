@@ -20,6 +20,26 @@
             *out* w]
     (pr obj)))
 
+;; can find by calling clang -### empty-file.h
+(def default-arguments
+  ["-resource-dir"
+   "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/13.1.6"
+   "-isysroot"
+   "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk"
+   "-I"
+   "/opt/local/include/"
+   "-I/usr/local/include"
+   "-internal-isystem"
+   "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/local/include"
+   "-internal-isystem"
+   "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/13.1.6/include"
+   "-internal-externc-isystem"
+   "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include"
+   "-internal-externc-isystem"
+   "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include"
+   "-syslibroot"
+   "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk"])
+
 (defn struct-type->id [type]
   (let [struct-name (-> type
                         (c/clang_getCanonicalType)
