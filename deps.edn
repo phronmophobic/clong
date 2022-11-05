@@ -31,4 +31,6 @@
 
   :project
   {:extra-deps {nodisassemble/nodisassemble {:mvn/version "0.1.3"}}
-   :jvm-opts ["-Djna.library.path=../llvm-project/build/out/lib"]}}}
+   :jvm-opts ["-Djna.library.path=../llvm-project/build/out/lib"
+              "--add-modules" "jdk.incubator.foreign"
+              "--enable-native-access=ALL-UNNAMED"]}}}
