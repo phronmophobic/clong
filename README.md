@@ -2,7 +2,11 @@
 
 A wrapper for libclang and a generator that can turn c header files into clojure apis.
 
-Currently, there is only a generator for clojure jna, but support for other ffi libs is likely.
+Currently, there is only a generator for jna, but support for other ffi libs is likely.
+
+## Rationale
+
+Writing wrappers for c libraries is tedious and error prone. The goal of clong is to streamline the process of creating wrapper for c libraries. It is a non-goal to make the process 100% automatic. However, it should be possible to do 80-90% of the work and provide tools that are useful for building higher level APIs.
 
 ## Usage
 
@@ -13,11 +17,11 @@ Parsing header files requires libclang to be available on the `jna.library.path`
 :jvm-opts ["-Djna.library.path=/my/lib/path"]
 ```
 
-Note: api wrapper generation does not require libclang.
+Note: libclang is only required for parsing. If an api specification has been pre-generated, then the api can be generated without libclang as a dependency.
 
 #### Obtaining libclang
 
-It's harder than it should be to acquire libclang. If you're on linux, there might be a package. I couldn't find one for mac osx, but it was easy to build locally from https://github.com/llvm/llvm-project. I built the project with the following configuration:
+It's harder than it should be to acquire libclang. If you're on linux, there might be a package (I haven't tested, but the internet seems to indicate `apt install build-essentials libclang-dev clang` should work. I couldn't find a package for mac osx, but it was easy to build locally from https://github.com/llvm/llvm-project. I built the project with the following configuration:
 
 ```
 mkdir build
@@ -71,6 +75,14 @@ Below is how clong can be used to generate a wrapper for libz ([full example](ht
 ```
 
 The basic idea is to generate a description of the api with `easy-api` and generate the required structs, functions, and enums with `gen-api`.
+
+
+### Tips
+
+- Structs will not have any fields reported if _any_ of the struct's fields has an undetermined size. If fields for a struct are missing, you may need to include more headers or make sure the system's standard paths are included (try `clang -### empty-file.h` to see what system paths might be missing).
+- Clong doesn't offer any special support for automatic memory management of ffi data.
+- You can include additional headers using the `-include` argument when parsing
+- Parsing headers can be slow and you probably don't want to ship headers and libclang with your wrapper library. Generate the wrapper ahead of time and save the result as a edn resource that can be loaded. In the future support for AOT may be added to better support this.
 
 ## Future Work
 
