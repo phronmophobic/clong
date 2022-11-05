@@ -14,7 +14,7 @@
    com.sun.jna.Structure)
   (:gen-class))
 
-(def ^:no-doc libz
+(def libz
   (com.sun.jna.NativeLibrary/getInstance "z"))
 
 (def api (clong/easy-api "/opt/local/include/zlib.h"))
@@ -23,17 +23,17 @@
 
 (zlibVersion) ;; "1.2.11"
 
-(def source (.getBytes "clong!")) 
+(def source "clong!")
 
 (def dest (byte-array 255))
 (def dest-size* (doto (LongByReference.)
                   (.setValue (alength dest))))
 
-(compress  dest dest-size* source (alength source)) ;; 0
+(compress  dest dest-size* source (count source)) ;; 0
 
 (.getValue dest-size*) ;; 14
 
-(def dest2 (byte-array (alength source)))
+(def dest2 (byte-array (count source)))
 (def dest2-size* (doto (LongByReference.)
                    (.setValue (alength dest2))))
 (uncompress dest2 dest2-size* dest (.getValue dest-size*)) ;; 0
