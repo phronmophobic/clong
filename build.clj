@@ -12,7 +12,7 @@
   (b/delete {:path "target"}))
 
 (defn compile [_]
-  (b/javac {:src-dirs ["javasrc"]
+  #_(b/javac {:src-dirs ["javasrc"]
             :class-dir class-dir
             :basis basis
             ;:javac-opts ["-source" "8" "-target" "8"]
