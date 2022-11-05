@@ -218,19 +218,25 @@
         index (ref! (c/clang_createIndex 0 0))
 
         options c/CXTranslationUnit_DetailedPreprocessingRecord
-        translation-unit (c/clang_parseTranslationUnit index
-                                                       (ref! fname)
-                                                       (ref!
-                                                        (into-array String
-                                                                    args))
-                                                       (count args)
-                                                       nil
-                                                       0
-                                                       options)
+
+        translation-unit* (PointerByReference.)
+        err
+        (c/clang_parseTranslationUnit2 index
+                                       (ref! fname)
+                                       (ref!
+                                        (into-array String
+                                                    args))
+                                       (count args)
+                                       nil
+                                       0
+                                       options
+                                       translation-unit*)
+        _ (assert (zero? err))
+        translation-unit (.getValue translation-unit*)
         _ (assert translation-unit)
+
         cursor (ref!
-                (c/clang_getTranslationUnitCursor translation-unit))
-        ]
+                (c/clang_getTranslationUnitCursor translation-unit))]
 
     cursor))
 
