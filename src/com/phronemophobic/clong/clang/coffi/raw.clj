@@ -1,4 +1,4 @@
-(ns com.phronemophobic.clong.clang.raw
+(ns com.phronemophobic.clong.clang.coffi.raw
   (:require [coffi.mem :as mem :refer [defalias]]
             [coffi.ffi :as ffi :refer [defcfn]]
             [clojure.string :as str]
@@ -12,24 +12,8 @@
                            pbr (PushbackReader. rdr)]
                  (edn/read pbr)))
 
-
 (defonce load-clang
   (ffi/load-system-library "clang"))
-
-(comment
-  (defonce load-align
-    (ffi/load-library "/Users/adrian/workspace/clong/csource/libalign.dylib"))
-  ,)
-
-
-#_(defcfn strlen
-    "Given a string, measures its length in bytes."
-    strlen [::mem/c-string] ::mem/long)
-
-#_(defalias ::point
-  [::mem/struct
-   [[:x ::mem/float]
-    [:y ::mem/float]]])
 
 (defn clang-layout [struct]
   (loop [offset 0
@@ -57,7 +41,6 @@
         (if (pos? final-padding)
           (conj layout [::layout/padding [::mem/padding final-padding]])
           layout)))))
-
 
 (defn def-struct* [struct]
   `(defalias ~(:id struct)
