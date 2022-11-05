@@ -1,6 +1,5 @@
-(ns com.phronemophobic.clong
+(ns com.phronemophobic.clong.clang.libpython
   (:require [libpython-clj2.python :refer [py. py.. py.-] :as py]
-            [zippo.core :as zippo]
             [clojure.string :as str]
             [tech.v3.datatype.ffi.clang :as ffi-clang]
             [tech.v3.datatype.ffi :as dt-ffi]
@@ -12,7 +11,7 @@
             [clojure.zip :as z]
             ))
 
-;; Requires Java17
+;; Requires Java17 and libpythonclj
 
 (py/initialize! :python-executable "/Users/adrian/cpython/out/bin/python3"
                 :library-path "/Users/adrian/cpython/out/lib/libpython3.12.dylib")
