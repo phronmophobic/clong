@@ -59,11 +59,9 @@
      ~@(for [struct (eval structs)]
          `(def-struct ~struct))))
 
-;; (def-structs (:structs clang-api))
-
 (defn simplify-pointer [t]
   (cond
-    (= t [:coffi.mem/pointer :coffi.mem/char]) ::mem/c-string
+    ;; (= t [:coffi.mem/pointer :coffi.mem/char]) ::mem/c-string
 
     (and (vector? t)
          (= ::mem/pointer (first t))
