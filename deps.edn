@@ -1,6 +1,6 @@
 {:paths ["src" "resources" "target/classes"]
  :deps {org.clojure/clojure {:mvn/version "1.10.3"}
-        cnuernber/dtype-next {:mvn/version "9.033"}
+
         #_#_org.suskalo/coffi {;; :mvn/version "0.5.357"
                            :local/root "../coffi"
                            }
@@ -8,9 +8,7 @@
         insn/insn {:mvn/version "0.5.2"}
         net.n01se/clojure-jna {:mvn/version "1.0.0"}
         aysylu/loom {:mvn/version "1.0.2"}
-        com.rpl/specter {:mvn/version "1.1.4"}
-        clj-python/libpython-clj {:mvn/version "2.020"}
-        com.github.igrishaev/zippo {:mvn/version "0.1.0"}}
+        com.rpl/specter {:mvn/version "1.1.4"}}
  :aliases
  {:test {:extra-paths ["test"]
          :extra-deps {org.clojure/test.check {:mvn/version "1.1.0"}}}
@@ -27,6 +25,8 @@
 
               ]
    :jvm-cmd "/Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home/bin/java"
+   :extra-deps [clj-python/libpython-clj {:mvn/version "2.020"}
+                cnuernber/dtype-next {:mvn/version "9.033"}]
    }
 
   :project
