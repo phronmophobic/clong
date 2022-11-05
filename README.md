@@ -2,7 +2,7 @@
 
 A wrapper for libclang and a generator that can turn c header files into clojure apis.
 
-Currently, there is only a generator for clojure jna, but support for other ffi libs is likely.
+Currently, there is only a generator for jna, but support for other ffi libs is likely.
 
 ## Usage
 
