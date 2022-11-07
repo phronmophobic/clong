@@ -12,7 +12,7 @@ Writing wrappers for c libraries is tedious and error prone. The goal of clong i
 
 ### Setup
 
-Parsing header files requires libclang to be available on the `jna.library.path`. You can set the `jna.library.path` by adding the following to an alias:
+Parsing header files requires libclang to be available on the `jna.library.path`. If you've installed libclang with a package manager, you can probably skip this step. You can set the `jna.library.path` by adding the following to an alias:
 ```
 :jvm-opts ["-Djna.library.path=/my/lib/path"]
 ```
