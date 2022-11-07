@@ -10,18 +10,18 @@ Writing wrappers for c libraries is tedious and error prone. The goal of clong i
 
 ## Usage
 
-### Setup
+### Obtaining libclang
 
-Parsing header files requires libclang to be available on the `jna.library.path`. If you've installed libclang with a package manager, you can probably skip this step. You can set the `jna.library.path` by adding the following to an alias:
+#### Linux
+
+You can install libclang with:
+
+```sh
+apt install build-essential libclang-dev clang
 ```
-:jvm-opts ["-Djna.library.path=/my/lib/path"]
-```
+#### Mac OSX
 
-Note: libclang is only required for parsing. If an api specification has been pre-generated, then the api can be generated without libclang as a dependency.
-
-#### Obtaining libclang
-
-It's harder than it should be to acquire libclang. If you're on linux, there might be a package (I haven't tested, but the internet seems to indicate `apt install build-essentials libclang-dev clang` should work). I couldn't find a package for mac osx, but it was easy to build locally from https://github.com/llvm/llvm-project. I built the project with the following configuration:
+It's harder than it should be to acquire libclang. I couldn't find a package for mac osx, but it was easy to build locally from https://github.com/llvm/llvm-project. I built the project with the following configuration:
 
 ```
 mkdir build
@@ -30,6 +30,15 @@ cmake -G 'Unix Makefiles' -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=`pwd
 make
 make install
 ```
+
+### Setup
+
+Parsing header files requires libclang to be available on the `jna.library.path`. You can set the `jna.library.path` by adding the following to an alias:
+```
+:jvm-opts ["-Djna.library.path=/my/lib/path"]
+```
+
+Note: libclang is only required for parsing. If an api specification has been pre-generated, then the api can be generated without libclang as a dependency.
 
 ### Parsing
 
