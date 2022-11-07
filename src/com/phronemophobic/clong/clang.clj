@@ -113,7 +113,8 @@
 (defn coffi-float-type [size]
   (case size
     4 :coffi.mem/float
-    8 :coffi.mem/double))
+    8 :coffi.mem/double
+    16 [:coffi.mem/array :coffi.mem/double 2]))
 
 (defn get-argument-types [type]
   (into []
