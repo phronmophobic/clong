@@ -82,7 +82,8 @@ The basic idea is to generate a description of the api with `easy-api` and gener
 - Structs will not have any fields reported if _any_ of the struct's fields has an undetermined size. If fields for a struct are missing, you may need to include more headers or make sure the system's standard paths are included (try `clang -### empty-file.h` to see what system paths might be missing).
 - Clong doesn't offer any special support for automatic memory management of ffi data.
 - You can include additional headers using the `-include` argument when parsing
-- Parsing headers can be slow and you probably don't want to ship headers and libclang with your wrapper library. Generate the wrapper ahead of time and save the result as a edn resource that can be loaded. In the future support for AOT may be added to better support this.
+- Parsing headers can be slow and you probably don't want to ship headers and libclang with your wrapper library. Generate the wrapper ahead of time and save the result as a edn resource that can be loaded. In the future, support for AOT may be added to better support this.
+- JNA has issues with writing to StructureByReference fields. In some cases, it's useful to override structure fields to be raw pointers.
 
 ## Future Work
 
