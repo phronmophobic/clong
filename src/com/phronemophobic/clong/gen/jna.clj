@@ -79,10 +79,10 @@
                 (reify
                   insn-util/ClassDesc
                   (class-desc [_]
-                    (str (str/replace struct-prefix #"\." "/") "/" (name ptype) "/ByReference"))
+                    (str (str/replace struct-prefix #"\." "/") "/" (name ptype) "ByReference"))
                   insn-util/TypeDesc
                   (type-desc [_]
-                    (str "L" (str/replace struct-prefix #"\." "/") "/" (name ptype) "/ByReference;")))
+                    (str "L" (str/replace struct-prefix #"\." "/") "/" (name ptype) "ByReference;")))
 
                 :else Pointer))))
 
@@ -147,7 +147,7 @@
                 (not= "coffi.mem"
                       (namespace ptype))
                 (try
-                  (Class/forName(str struct-prefix "." (name ptype) ".ByReference"))
+                  (Class/forName(str struct-prefix "." (name ptype) "ByReference"))
                   (catch java.lang.ClassNotFoundException e
                     Pointer))
 
@@ -223,7 +223,7 @@
 
 (defn struct->class-by-ref [struct-prefix struct]
   (assoc (struct->class-def* struct-prefix struct)
-         :name (symbol (str struct-prefix "." (name (:id struct)) ".ByReference"))
+         :name (symbol (str struct-prefix "." (name (:id struct)) "ByReference"))
          :interfaces [Structure$ByReference]))
 
 (defn struct->class-by-value [struct-prefix struct]
@@ -371,9 +371,9 @@
              (.invoke ~cfn-sym
                       ret-type# (to-array args#))))))))
 
-;; Where possible, we want to use MyStruct.ByReference
+;; Where possible, we want to use MyStructByReference
 ;; to make the generated API easier to use.
-;; However, we can't use MyStruct.ByReference
+;; However, we can't use MyStructByReference
 ;; if MyStruct is a forward declaration
 ;; and we don't actually know the size or fields.
 ;; In those cases, we'll just use Pointer.
