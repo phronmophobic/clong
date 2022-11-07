@@ -6,7 +6,7 @@ Currently, there is only a generator for jna, but support for other ffi libs is 
 
 ## Rationale
 
-Writing wrappers for c libraries is tedious and error prone. The goal of clong is to streamline the process of creating wrapper for c libraries. It is a non-goal to make the process 100% automatic. However, it should be possible to do 80-90% of the work and provide tools that are useful for building higher level APIs.
+Writing wrappers for c libraries is tedious and error prone. The goal of clong is to streamline the process of creating wrappers for c libraries. It is a non-goal to make the process 100% automatic. However, it should be possible to do 80-90% of the work and provide tools that are useful for building higher level APIs.
 
 ## Usage
 
@@ -76,6 +76,16 @@ Below is how clong can be used to generate a wrapper for libz ([full example](ht
 
 The basic idea is to generate a description of the api with `easy-api` and generate the required structs, functions, and enums with `def-api`.
 
+### Examples
+
+Examples can be found in the [examples directory](https://github.com/phronmophobic/clong/tree/main/examples).
+
+- [libz](https://github.com/phronmophobic/clong/tree/main/examples/libz)
+- [freetype](https://github.com/phronmophobic/clong/tree/main/examples/freetype)
+
+For a more complicated example, clong's [clang interface](https://github.com/phronmophobic/clong/blob/main/src/com/phronemophobic/clong/clang/jna/raw.clj) is [generated](https://github.com/phronmophobic/clong/blob/main/src/com/phronemophobic/clong/clang.clj#L546) by clong itself.
+
+Additionally, clong was successfully able to generate a complete wrapper for the libav* libraries, ([source](https://github.com/phronmophobic/clj-media/blob/main/src/com/phronemophobic/clj_media/audio.clj#L138)).
 
 ### Tips
 
