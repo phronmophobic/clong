@@ -19,6 +19,18 @@
            com.sun.jna.Callback
            java.util.List))
 
+;; setenv("LIBCLANG_DISABLE_CRASH_RECOVERY", "1", 1)
+;; https://github.com/dotnet/ClangSharp/issues/167
+;; https://reviews.llvm.org/D23662
+(def ^:no-doc libc
+  (delay (com.sun.jna.NativeLibrary/getInstance "c")))
+
+(let [setenv* (.getFunction @libc "setenv")]
+  (defn- setenv [name value overwrite]
+    (.invoke setenv* Void/TYPE
+             (to-array [name value overwrite]))))
+(setenv "LIBCLANG_DISABLE_CRASH_RECOVERY" "1" 0)
+
 (def ^:no-doc libclang
   (com.sun.jna.NativeLibrary/getInstance "clang"))
 
