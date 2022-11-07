@@ -232,8 +232,16 @@
          :interfaces [Structure$ByValue]))
 
 (defn def-struct [struct-prefix struct]
-  (insn/define (struct->class-by-ref struct-prefix struct) )
-  (insn/define (struct->class-by-value struct-prefix struct) ))
+  (let [by-ref-def (struct->class-by-ref struct-prefix struct)
+        by-value-def (struct->class-by-value struct-prefix struct)]
+    (insn/define by-ref-def)
+    (insn/define by-value-def)))
+
+(defn import-struct [struct-prefix struct]
+  (let [by-ref-def (struct->class-by-ref struct-prefix struct)
+        by-value-def (struct->class-by-value struct-prefix struct)]
+    (eval `(import ~(:name by-ref-def)))
+    (eval `(import ~(:name by-value-def)))))
 
 (defn make-callback-interface* [struct-prefix ret-type arg-types]
   {:flags #{:public :interface}
@@ -442,7 +450,8 @@
       (run! #(eval (def-enum* %))
             (:enums api#))
       (run! #(def-struct struct-prefix# %) (:structs api#))
-      (run! #((eval (def-fn* struct-prefix# %)) lib#) (:functions api#)))))
+      (run! #((eval (def-fn* struct-prefix# %)) lib#) (:functions api#))
+      (run! #(import-struct struct-prefix# %) (:structs api#)))))
 
 
 (comment
