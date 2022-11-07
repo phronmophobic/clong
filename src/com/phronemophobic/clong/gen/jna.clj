@@ -379,6 +379,23 @@
              (.invoke ~cfn-sym
                       ret-type# (to-array args#))))))))
 
+(def POINTER-TYPES
+  (specter/recursive-path [] p
+	                  (specter/if-path (fn [t]
+                                             (when (and (vector? t)
+                                                        (>= (count t) 2))
+                                               (let [type (first t)]
+                                                 (or (= type :coffi.mem/pointer)
+                                                     (= type :coffi.mem/array)))))
+		                           (specter/stay-then-continue
+                                            [;; make sure selection is
+                                             ;; still a vector after transformation
+                                             vector?
+                                             (specter/nthpath 1)
+                                             p])
+                                           specter/STAY)))
+
+
 ;; Where possible, we want to use MyStructByReference
 ;; to make the generated API easier to use.
 ;; However, we can't use MyStructByReference
@@ -413,13 +430,15 @@
 
                (not= "coffi.mem"
                      (namespace (second t)))))
-
-        pointee-type (specter/nthpath 1)]
-    (specter/setval [(specter/multi-path function-types-path
+        ref-path [(specter/multi-path function-types-path
                                          struct-types-path)
+                     POINTER-TYPES
                      qualified-pointer-type?
                      (fn [[_ pointee-type]]
-                       (not (contains? known-struct-types pointee-type)))]
+                       (not (contains? known-struct-types pointee-type)))]]
+    #_(specter/select ref-path
+                      api)
+    (specter/setval ref-path
                     :coffi.mem/pointer
                     api)))
 
