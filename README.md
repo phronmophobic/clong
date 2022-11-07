@@ -21,7 +21,7 @@ Note: libclang is only required for parsing. If an api specification has been pr
 
 #### Obtaining libclang
 
-It's harder than it should be to acquire libclang. If you're on linux, there might be a package (I haven't tested, but the internet seems to indicate `apt install build-essentials libclang-dev clang` should work. I couldn't find a package for mac osx, but it was easy to build locally from https://github.com/llvm/llvm-project. I built the project with the following configuration:
+It's harder than it should be to acquire libclang. If you're on linux, there might be a package (I haven't tested, but the internet seems to indicate `apt install build-essentials libclang-dev clang` should work). I couldn't find a package for mac osx, but it was easy to build locally from https://github.com/llvm/llvm-project. I built the project with the following configuration:
 
 ```
 mkdir build
