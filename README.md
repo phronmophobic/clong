@@ -74,7 +74,7 @@ Below is how clong can be used to generate a wrapper for libz ([full example](ht
 (String. dest2) ;; "clong!"
 ```
 
-The basic idea is to generate a description of the api with `easy-api` and generate the required structs, functions, and enums with `gen-api`.
+The basic idea is to generate a description of the api with `easy-api` and generate the required structs, functions, and enums with `def-api`.
 
 
 ### Tips
