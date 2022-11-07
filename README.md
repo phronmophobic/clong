@@ -42,6 +42,8 @@ make install
      (map cursor-info))
 ```
 
+To get a flavor of some of the data that can be extracted, check out clong's [datafied version of the libclang API](https://github.com/phronmophobic/clong/blob/main/resources/clang-api.edn).
+
 ### Generating APIs
 
 Below is how clong can be used to generate a wrapper for libz ([full example](https://github.com/phronmophobic/clong/tree/master/examples/libz)):
