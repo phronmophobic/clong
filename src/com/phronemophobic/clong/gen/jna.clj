@@ -468,6 +468,16 @@
 (defmacro def-enum [enum]
   (def-enum* enum))
 
+(defmacro import-structs!
+  ([api]
+   `(import-structs! ~api ~(str (munge (ns-name *ns*))
+                                "."
+                                "structs")))
+  ([api struct-prefix]
+   `(let [api# (replace-forward-references ~api)
+          struct-prefix# ~struct-prefix]
+      (run! #(import-struct struct-prefix# %) (:structs api#)))))
+
 
 (defmacro def-api
   ([lib api]
@@ -482,7 +492,8 @@
             (:enums api#))
       (run! #(def-struct struct-prefix# %) (:structs api#))
       (run! #((eval (def-fn* struct-prefix# %)) lib#) (:functions api#))
-      (run! #(import-struct struct-prefix# %) (:structs api#)))))
+      ;;(run! #(import-struct struct-prefix# %) (:structs api#))
+      )))
 
 
 (comment
