@@ -10,6 +10,18 @@ Writing wrappers for c libraries is tedious and error prone. The goal of clong i
 
 ## Usage
 
+Leiningen dependency:
+
+```clojure
+[com.phronemophobic/clong "0.9.0"]
+```
+
+deps.edn dependency:
+
+```clojure
+com.phronemophobic/clong {:mvn/version "0.9.0"}
+```
+
 ### Obtaining libclang
 
 #### Linux
