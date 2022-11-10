@@ -386,13 +386,25 @@
                                                         (>= (count t) 2))
                                                (let [type (first t)]
                                                  (or (= type :coffi.mem/pointer)
-                                                     (= type :coffi.mem/array)))))
+                                                     (= type :coffi.mem/array)
+                                                     (= type :coffi.ffi/fn)))))
 		                           (specter/stay-then-continue
                                             [;; make sure selection is
                                              ;; still a vector after transformation
                                              vector?
-                                             (specter/nthpath 1)
+
+                                             (specter/if-path #(= :coffi.ffi/fn (first %))
+                                                              (specter/multi-path
+                                                               ;; args
+                                                               [(specter/nthpath 1) specter/ALL]
+                                                               ;; ret
+                                                               (specter/nthpath 2))
+
+                                                              ;; else
+                                                              (specter/nthpath 1))
+                                             ;; recurse
                                              p])
+                                           ;; else, not a compound type
                                            specter/STAY)))
 
 
@@ -431,11 +443,11 @@
                (not= "coffi.mem"
                      (namespace (second t)))))
         ref-path [(specter/multi-path function-types-path
-                                         struct-types-path)
-                     POINTER-TYPES
-                     qualified-pointer-type?
-                     (fn [[_ pointee-type]]
-                       (not (contains? known-struct-types pointee-type)))]]
+                                      struct-types-path)
+                  POINTER-TYPES
+                  qualified-pointer-type?
+                  (fn [[_ pointee-type]]
+                    (not (contains? known-struct-types pointee-type)))]]
     #_(specter/select ref-path
                       api)
     (specter/setval ref-path
