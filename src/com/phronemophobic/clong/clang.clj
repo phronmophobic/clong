@@ -89,7 +89,12 @@
 
             struct-name (if (str/starts-with? struct-name "struct ")
                           (subs struct-name (count "struct "))
-                          struct-name)]
+                          struct-name)
+
+            ;; ;; enforce starting with a letter?
+            ;; struct-name (if (not (re-find #"^[a-zA-Z]" struct-name))
+            ;;               (str ))
+            ]
         (keyword "clong" struct-name)))))
 
 ;; not sure this right
