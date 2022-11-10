@@ -17,10 +17,11 @@
 (def ^:no-doc libfreetype
   (com.sun.jna.NativeLibrary/getInstance "freetype"))
 
-(def api (clong/easy-api (.getAbsolutePath (io/file "resources/freetype.h"))
+(def api (clong/easy-api "/opt/local/include/freetype2/freetype/freetype.h"
                          ["-I/opt/local/include/freetype2/"]))
 
 (gen/def-api libfreetype api)
+(gen/import-structs! api)
 
 (def library* (PointerByReference.))
 
@@ -36,9 +37,7 @@
              ) ;; 0
 (def face (.getValue face*))
 
-(def fmt-ctx+ )
-
-(def face+ (doto (Structure/newInstance com.phronemophobic.freetype.structs.FT_FaceRec_
+(def face+ (doto (Structure/newInstance FT_FaceRec_
                                         face)
              (.read)))
 
@@ -57,7 +56,7 @@
 
 (FT_Load_Glyph
  face, ;;         /* handle to face object */
- glyph_index,;;   /* glyph index           */
+ glyph-index,;;   /* glyph index           */
  0 );; 0
 
 (FT_Render_Glyph (.glyph face+),  ; /* glyph slot  */
