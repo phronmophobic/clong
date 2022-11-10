@@ -75,6 +75,7 @@
   (let [cur (c/clang_getTypeDeclaration type)
         anonymous? (not (zero? (c/clang_Cursor_isAnonymous cur)))]
     (if anonymous?
+      ;; should use clang_getCursorUSR?
       ;; negative hash numbers add hypens
       (keyword "clong" (str "Struct_" (format "%X" (hash (mapv field->map (get-fields type)) ))))
       (let [struct-name (-> type
