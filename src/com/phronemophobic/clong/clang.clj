@@ -233,7 +233,10 @@
                                        0
                                        options
                                        translation-unit*)
-        _ (assert (zero? err))
+        _ (when (not (zero? err))
+            (throw (ex-info "Parse Error"
+                            {:error-code err})))
+
         translation-unit (.getValue translation-unit*)
         _ (assert translation-unit)
 
