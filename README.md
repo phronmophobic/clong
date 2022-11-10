@@ -105,6 +105,7 @@ Examples can be found in the [examples directory](https://github.com/phronmophob
 
 - [libz](https://github.com/phronmophobic/clong/tree/main/examples/libz)
 - [freetype](https://github.com/phronmophobic/clong/tree/main/examples/freetype)
+- [glfw](https://github.com/phronmophobic/clj-glfw)
 
 For a more complicated example, clong's [clang interface](https://github.com/phronmophobic/clong/blob/main/src/com/phronemophobic/clong/clang/jna/raw.clj) is [generated](https://github.com/phronmophobic/clong/blob/main/src/com/phronemophobic/clong/clang.clj#L546) by clong itself.
 
