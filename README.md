@@ -13,13 +13,13 @@ Writing wrappers for c libraries is tedious and error prone. The goal of clong i
 Leiningen dependency:
 
 ```clojure
-[com.phronemophobic/clong "0.9.0"]
+[com.phronemophobic/clong "0.9.1"]
 ```
 
 deps.edn dependency:
 
 ```clojure
-com.phronemophobic/clong {:mvn/version "0.9.0"}
+com.phronemophobic/clong {:mvn/version "0.9.1"}
 ```
 
 ### Obtaining libclang
@@ -105,6 +105,7 @@ Examples can be found in the [examples directory](https://github.com/phronmophob
 
 - [libz](https://github.com/phronmophobic/clong/tree/main/examples/libz)
 - [freetype](https://github.com/phronmophobic/clong/tree/main/examples/freetype)
+- [glfw](https://github.com/phronmophobic/clj-glfw)
 
 For a more complicated example, clong's [clang interface](https://github.com/phronmophobic/clong/blob/main/src/com/phronemophobic/clong/clang/jna/raw.clj) is [generated](https://github.com/phronmophobic/clong/blob/main/src/com/phronemophobic/clong/clang.clj#L546) by clong itself.
 
