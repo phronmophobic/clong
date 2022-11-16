@@ -24,7 +24,11 @@
            com.sun.jna.Structure
            com.sun.jna.Structure$FieldOrder
            com.sun.jna.Callback
-           java.util.List))
+           java.util.List
+
+           clojure.java.api.Clojure
+           clojure.lang.IFn
+           clojure.lang.ILookup))
 
 (def ^:no-doc main-class-loader @clojure.lang.Compiler/LOADER)
 (def ^:no-doc void Void/TYPE)
@@ -176,6 +180,15 @@
   (swap! not-garbage conj x)
   x)
 
+ (defn load-var-inst [sym]
+   [[:ldc (namespace sym)]
+    [:ldc (name sym)]
+    [:invokestatic Clojure "var" [Object Object IFn]]])
+
+(defn ^:private structure_valAt
+  ([s k]
+   (.readField ^Structure s (name k))))
+
 (defn struct->class-def* [struct-prefix struct]
   (let [fields (:fields struct)]
     {
@@ -216,7 +229,15 @@
                 fields)
 
 
-               [[:return]]))}]
+               [[:return]]))}
+      {:name :valAt
+       :desc [Object Object]
+       :emit
+       [(load-var-inst `structure_valAt)
+        [:aload 0]
+        [:aload 1]
+        [:invokeinterface IFn "invoke" [Object Object Object]]
+        [:areturn]]}]
      
      :annotations {com.sun.jna.Structure$FieldOrder
                    (mapv :name fields)}}))
@@ -224,12 +245,12 @@
 (defn struct->class-by-ref [struct-prefix struct]
   (assoc (struct->class-def* struct-prefix struct)
          :name (symbol (str struct-prefix "." (name (:id struct)) "ByReference"))
-         :interfaces [Structure$ByReference]))
+         :interfaces [Structure$ByReference ILookup]))
 
 (defn struct->class-by-value [struct-prefix struct]
   (assoc (struct->class-def* struct-prefix struct)
          :name (symbol (str struct-prefix "." (name (:id struct))))
-         :interfaces [Structure$ByValue]))
+         :interfaces [Structure$ByValue ILookup]))
 
 (defn def-struct [struct-prefix struct]
   (let [by-ref-def (struct->class-by-ref struct-prefix struct)
