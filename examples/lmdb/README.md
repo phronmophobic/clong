@@ -1,4 +1,4 @@
-# freetype
+# LMDB
 
 Example of using clong to interoperate with lmdb.
 
