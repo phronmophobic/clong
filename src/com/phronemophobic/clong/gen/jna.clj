@@ -189,6 +189,14 @@
   ([s k]
    (.readField ^Structure s (name k))))
 
+(defn field-name [field]
+  (let [fname (:name field)]
+    ;; sometimes, field names are empty
+    ;; generate a consistent, automatic name
+    (if (= fname "")
+      (str "field_" (:calculated-offset field))
+      fname)))
+
 (defn struct->class-def* [struct-prefix struct]
   (let [fields (:fields struct)]
     {
@@ -201,7 +209,7 @@
                           (let [type (coffi-type->insn-type struct-prefix (:datatype field))]
                             (merge
                              {:flags #{:public}
-                              :name (:name field)
+                              :name (field-name field)
                               :type type}))))
                    fields)
      :methods
@@ -215,7 +223,7 @@
                 (filter (fn [{t :datatype}]
                           (and (vector? t)
                                (= :coffi.mem/array (first t)))))
-                (mapcat (fn [{:keys [datatype name]}]
+                (mapcat (fn [{:keys [datatype] :as field}]
                           (let [[_ t size] datatype
                                 array-type (coffi-type->insn-type struct-prefix t)]
                             [[:aload 0]
@@ -224,7 +232,7 @@
                              (if (insn-util/array-type-keyword? array-type )
                                [:newarray array-type]
                                [:anewarray array-type])
-                             [:putfield :this name (coffi-type->insn-type struct-prefix datatype)]
+                             [:putfield :this (field-name field) (coffi-type->insn-type struct-prefix datatype)]
                              ])))
                 fields)
 
@@ -240,7 +248,7 @@
         [:areturn]]}]
      
      :annotations {com.sun.jna.Structure$FieldOrder
-                   (mapv :name fields)}}))
+                   (mapv field-name fields)}}))
 
 (defn struct->class-by-ref [struct-prefix struct]
   (assoc (struct->class-def* struct-prefix struct)
