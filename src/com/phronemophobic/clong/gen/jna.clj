@@ -194,7 +194,7 @@
     ;; sometimes, field names are empty
     ;; generate a consistent, automatic name
     (if (= fname "")
-      (str "field_" (:calculated-offset field))
+      (str "__anonymous_field_" (:calculated-offset field))
       fname)))
 
 (defn struct->class-def* [struct-prefix struct]
