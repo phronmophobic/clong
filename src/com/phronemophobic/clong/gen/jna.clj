@@ -193,6 +193,8 @@
   (let [fname (:name field)]
     ;; sometimes, field names are empty
     ;; generate a consistent, automatic name
+    ;; if there is a conflict, class creation will
+    ;;   throw an error
     (if (= fname "")
       (str "__anonymous_field_" (:calculated-offset field))
       fname)))
