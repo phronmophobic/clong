@@ -509,23 +509,31 @@
           struct-prefix# ~struct-prefix]
       (run! #(import-struct struct-prefix# %) (:structs api#)))))
 
+(defn ns-struct-prefix [ns]
+  (str (munge (ns-name ns))
+       "."
+       "structs"))
+
+(defmacro def-enums
+  ([enums]
+   `(run! #(eval (def-enum* %)) ~enums)))
+
+(defmacro def-structs [structs struct-prefix]
+  `(run! #(def-struct ~struct-prefix %) ~structs))
+
+(defmacro def-functions [lib functions struct-prefix]
+  `(run! #((eval (def-fn* ~struct-prefix %)) ~lib) ~functions))
 
 (defmacro def-api
   ([lib api]
-   `(def-api ~lib ~api ~(str (munge (ns-name *ns*))
-                             "."
-                             "structs")))
+   `(def-api ~lib ~api ~(ns-struct-prefix *ns*)))
   ([lib api struct-prefix]
    `(let [api# (replace-forward-references ~api)
           lib# ~lib
           struct-prefix# ~struct-prefix]
-      (run! #(eval (def-enum* %))
-            (:enums api#))
-      (run! #(def-struct struct-prefix# %) (:structs api#))
-      (run! #((eval (def-fn* struct-prefix# %)) lib#) (:functions api#))
-      ;;(run! #(import-struct struct-prefix# %) (:structs api#))
-      )))
-
+      (def-enums (:enums api#))
+      (def-structs (:structs api#) struct-prefix#)
+      (def-functions lib# (:functions api#) struct-prefix#))))
 
 (comment
   (require '[no.disassemble.r :as r]
