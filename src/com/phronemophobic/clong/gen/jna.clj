@@ -362,7 +362,7 @@
                               {:o o})))
             o))))))
 
-(defn def-fn* [struct-prefix f]
+(defn fn-ast [struct-prefix f]
   (let [args (mapv (fn [arg]
                      (let [arg-name (:spelling arg)]
                        (symbol
@@ -372,43 +372,47 @@
                                        "_")
                           arg-name))))
                    (:args f))
-        cfn-sym (with-meta (gensym "cfn") {:tag 'com.sun.jna.Function})
         fn-name (symbol (:symbol f))
         lib## (gensym "lib_")
-]
-    `(fn [~lib##]
-       (let [struct-prefix# ~struct-prefix
-             ret-type# (coffi-type->jna struct-prefix#
-                                        ~(:function/ret f))
-             coercers#
-             (doall (map #(coercer struct-prefix# %) ~(:function/args f)))]
-         (defn ~fn-name
-           ~(let [doc (:raw-comment f)]
-              (str
-               (-> f :ret :spelling) " " (:name f) "("
-               (str/join ", "
-                         (eduction
-                          (map (fn [arg]
-                                 (str (:type arg)
-                                      " "
-                                      (:spelling arg)))
-                               (:args f))))
-               ")"
-               "\n"
-               doc))
-           ~args
-           (let [~cfn-sym (.getFunction ~(with-meta lib## {:tag 'com.sun.jna.NativeLibrary})
-                                        ~(name fn-name))
-                 args# (map (fn [coerce# arg#]
-                              (coerce# arg#))
-                            coercers#
-                            ~args)]
-             #_(prn "invoking "
-                  ~(name fn-name)
-                  (mapv type args#)
-                  args#)
-             (.invoke ~cfn-sym
-                      ret-type# (to-array args#))))))))
+        doc-string (let [doc (:raw-comment f)]
+                     (str
+                      (-> f :ret :spelling) " " (:name f) "("
+                      (str/join ", "
+                                (eduction
+                                 (map (fn [arg]
+                                        (str (:type arg)
+                                             " "
+                                             (:spelling arg)))
+                                      (:args f))))
+                      ")"
+                      "\n"
+                      doc))
+        cfn-sym (with-meta (gensym "cfn") {:tag 'com.sun.jna.Function})
+        fn-def `(fn [~lib##]
+                  (let [struct-prefix# ~struct-prefix
+                        ret-type# (coffi-type->jna struct-prefix#
+                                                   ~(:function/ret f))
+                        coercers#
+                        (doall (map #(coercer struct-prefix# %) ~(:function/args f)))
+
+                        ~cfn-sym (.getFunction ~(with-meta lib## {:tag 'com.sun.jna.NativeLibrary})
+                                               ~(name fn-name))]
+                    (fn ~fn-name ~args
+                      (let [args# (map (fn [coerce# arg#]
+                                         (coerce# arg#))
+                                       coercers#
+                                       ~args)]
+                        (.invoke ~cfn-sym
+                                 ret-type# (to-array args#))))))]
+    {:name fn-name
+     :doc-string doc-string
+     :args args
+     :->fn fn-def
+     :->defn
+     `(fn [~lib##]
+        (let [f# (~fn-def ~lib##)]
+          (defn ~fn-name ~doc-string ~args
+            (f# ~@args))))}))
 
 (def POINTER-TYPES
   (specter/recursive-path [] p
@@ -522,7 +526,11 @@
   `(run! #(def-struct ~struct-prefix %) ~structs))
 
 (defmacro def-functions [lib functions struct-prefix]
-  `(run! #((eval (def-fn* ~struct-prefix %)) ~lib) ~functions))
+  `(run! (fn [fdef#]
+           (let [def-form# (-> (fn-ast ~struct-prefix fdef#)
+                               :->defn)]
+             ((eval def-form#) ~lib)))
+         ~functions))
 
 (defmacro def-api
   ([lib api]
