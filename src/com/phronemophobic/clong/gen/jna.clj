@@ -421,9 +421,11 @@
      :->fn fn-def
      :->defn
      `(fn [~lib##]
-        (let [f# (~fn-def ~lib##)]
+        (let [;; delay looking up function symbol
+              ;; until needed.
+              f# (delay (~fn-def ~lib##))]
           (defn ~fn-name ~doc-string ~args
-            (f# ~@args))))}))
+            (@f# ~@args))))}))
 
 (def POINTER-TYPES
   (specter/recursive-path [] p
