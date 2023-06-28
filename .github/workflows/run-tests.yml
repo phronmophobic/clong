@@ -4,7 +4,11 @@ on:
 jobs:
   build:
 
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [macos-11, ubuntu-20.04]
+
+    runs-on: ${{ matrix.os }}
 
     steps:
     - name: Prepare java
