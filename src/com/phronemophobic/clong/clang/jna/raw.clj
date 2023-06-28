@@ -36,8 +36,12 @@
 ;; Any function would do, but this is a particularly easy example.
 (clang/clang_getNullCursor)
 
+(import 'org.bytedeco.javacpp.Loader)
+
 (def ^:no-doc libclang
-  (com.sun.jna.NativeLibrary/getProcess)
+  (com.sun.jna.NativeLibrary/getInstance
+   (get (Loader/getLoadedLibraries) "clang@.16"))
+  #_(com.sun.jna.NativeLibrary/getProcess)
   #_(com.sun.jna.NativeLibrary/getInstance "clang"))
 
 (def clang-api (with-open [rdr (io/reader
