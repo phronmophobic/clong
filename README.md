@@ -82,6 +82,10 @@ Examples can be found in the [examples directory](https://github.com/phronmophob
 - [lmdb](https://github.com/phronmophobic/clong/tree/main/examples/lmdb)
 - [glfw](https://github.com/phronmophobic/clj-glfw)
 
+Other projects using clong:
+- [clj-graphviz](https://github.com/phronmophobic/clj-graphviz)
+- [clj-libretro](https://github.com/phronmophobic/clj-libretro)
+
 For a more complicated example, clong's [clang interface](https://github.com/phronmophobic/clong/blob/main/src/com/phronemophobic/clong/clang/jna/raw.clj) is [generated](https://github.com/phronmophobic/clong/blob/main/src/com/phronemophobic/clong/clang.clj#L546) by clong itself.
 
 Additionally, clong was successfully able to generate a complete wrapper for the libav* libraries, ([source](https://github.com/phronmophobic/clj-media/blob/main/src/com/phronemophobic/clj_media/audio.clj#L138)).
