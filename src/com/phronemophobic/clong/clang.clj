@@ -455,12 +455,16 @@
         spelling (c/clang_getCString
                   (c/clang_getCursorSpelling cur))
         type-spelling (c/clang_getCString
-                       (c/clang_getTypeSpelling field-type))]
-    {:type type-spelling
-     :datatype (clang-type->coffi field-type)
-     :name spelling
-     :calculated-offset (c/clang_Cursor_getOffsetOfField cur)})
-  )
+                       (c/clang_getTypeSpelling field-type))
+        bitfield? (not (zero? (c/clang_Cursor_isBitField cur)))
+        m {:type type-spelling
+           :datatype (clang-type->coffi field-type)
+           :name spelling
+           :bitfield? bitfield?
+           :calculated-offset (c/clang_Cursor_getOffsetOfField cur)}]
+    (if bitfield?
+      (assoc m :bitfield-width (c/clang_getFieldDeclBitWidth cur))
+      m)))
 
 (defmethod extra-cursor-info "CXCursor_StructDecl"
   [cur]

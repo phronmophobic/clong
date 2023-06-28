@@ -200,7 +200,18 @@
       fname)))
 
 (defn struct->class-def* [struct-prefix struct]
-  (let [fields (:fields struct)]
+  (let [fields (:fields struct)
+        has-bitfields? (some :bitfield? fields)
+        ;; jna doesn't support bitfields
+        ;; https://github.com/java-native-access/jna/issues/423
+        ;; for now, just replace all fields with an opaque
+        ;; field so that the structure is the right size
+        ;; and we don't have fields pointing to the wrong data
+        fields (if has-bitfields?
+                 [{:name "opaque__no_bitfield_support_yet"
+                   :datatype [:coffi.mem/array :coffi.mem/char
+                              (:size-in-bytes struct)]}]
+                 fields)]
     {
      ;; :name (symbol (str struct-prefix "." (name (:id struct))))
      ;; :interfaces [Structure$ByValue]
