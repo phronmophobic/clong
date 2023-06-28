@@ -1,5 +1,5 @@
 {:paths ["src" "resources" "target/classes"]
- :deps {org.clojure/clojure {:mvn/version "1.10.3"}
+ :deps {org.clojure/clojure {:mvn/version "1.12.0-alpha3"}
 
         #_#_org.suskalo/coffi {;; :mvn/version "0.5.357"
                            :local/root "../coffi"
@@ -30,9 +30,7 @@
    }
 
   :project
-  {:extra-deps {nodisassemble/nodisassemble {:mvn/version "0.1.3"}}
-   :jvm-opts ["-Djna.library.path=../llvm-project/build/out/lib"
-              "--add-modules" "jdk.incubator.foreign"
-              "--enable-native-access=ALL-UNNAMED"
-              "-javaagent:/Users/adrian/.m2/repository/nodisassemble/nodisassemble/0.1.3/nodisassemble-0.1.3.jar"
+  {:extra-deps {nodisassemble/nodisassemble {:mvn/version "0.1.3"}
+                org.bytedeco/llvm-platform {:mvn/version "16.0.4-1.5.9"}}
+   :jvm-opts [;; "-javaagent:/Users/adrian/.m2/repository/nodisassemble/nodisassemble/0.1.3/nodisassemble-0.1.3.jar"
               ]}}}

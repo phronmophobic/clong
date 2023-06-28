@@ -31,9 +31,14 @@
              (to-array [name value overwrite]))))
 (setenv "LIBCLANG_DISABLE_CRASH_RECOVERY" "1" 0)
 
-(def ^:no-doc libclang
-  (com.sun.jna.NativeLibrary/getInstance "clang"))
+(import 'org.bytedeco.llvm.global.clang)
+;; This causes libclang to be loaded into the process.
+;; Any function would do, but this is a particularly easy example.
+(clang/clang_getNullCursor)
 
+(def ^:no-doc libclang
+  (com.sun.jna.NativeLibrary/getProcess)
+  #_(com.sun.jna.NativeLibrary/getInstance "clang"))
 
 (def clang-api (with-open [rdr (io/reader
                                 (io/resource
