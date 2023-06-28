@@ -26,6 +26,6 @@ jobs:
       run: clojure -P
 
     - name: Libz example
-      run: cd examples/libz clojure -M -m clong.libz
+      run: cd examples/libz && clojure -M -m clong.libz
 
 
