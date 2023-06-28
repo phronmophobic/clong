@@ -1,4 +1,4 @@
-(ns com.phronemophobic.libz
+(ns clong.libz
   (:require [clojure.java.io :as io]
             [clojure.string :as str]
             [clojure.pprint :refer [pprint]]
@@ -17,7 +17,8 @@
 (def libz
   (com.sun.jna.NativeLibrary/getInstance "z"))
 
-(def api (clong/easy-api "/opt/local/include/zlib.h"))
+(def api (clong/easy-api (.getCanonicalPath (io/file "resources"
+                                                     "zlib.h"))))
 
 (gen/def-api libz api)
 
@@ -41,3 +42,4 @@
 (String. dest2) ;; "clong!"
 
 
+(defn -main [& args])
