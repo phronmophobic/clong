@@ -553,11 +553,16 @@
 
 (defn dump-clang-api []
   (with-open [w (io/writer (io/file
-                            "resources" "clang-api.edn"))]
-    (write-edn w (->> (parse "/Users/adrian/workspace/llvm-project/build/out/include/clang-c/Index.h"
+                            "resources"
+                            "com"
+                            "phronemophobic"
+                            "clong"
+                            "clang"
+                            "api.edn"))]
+    (write-edn w (->> (parse "/Users/adrian/workspace/llvm-project/out/include/clang-c/Index.h"
                              (conj
                               default-arguments
-                              "-I/Users/adrian/workspace/llvm-project/build/out/include/"))
+                              "-I/Users/adrian/workspace/llvm-project/out/include/"))
                       get-children
                       (map cursor-info)
                       (remove (fn [cur]

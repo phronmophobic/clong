@@ -35,7 +35,9 @@
   (com.sun.jna.NativeLibrary/getInstance "clang"))
 
 
-(def clang-api (with-open [rdr (io/reader (io/resource "clang-api.edn"))
+(def clang-api (with-open [rdr (io/reader
+                                (io/resource
+                                 "com/phronemophobic/clong/clang/api.edn"))
                            pbr (PushbackReader. rdr)]
                  (edn/read pbr)))
 
