@@ -36,6 +36,12 @@
 ;; Any function would do, but this is a particularly easy example.
 (clang/clang_getNullCursor)
 
+(import 'org.bytedeco.javacpp.Loader)
+(require 'clojure.pprint)
+(clojure.pprint/pprint (Loader/getLoadedLibraries))
+(doseq [[k v] (Loader/getLoadedLibraries)]
+  (println k ":" v))
+
 (def ^:no-doc libclang
   (com.sun.jna.NativeLibrary/getProcess)
   #_(com.sun.jna.NativeLibrary/getInstance "clang"))
