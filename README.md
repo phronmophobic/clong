@@ -13,44 +13,18 @@ Writing wrappers for c libraries is tedious and error prone. The goal of clong i
 Leiningen dependency:
 
 ```clojure
-[com.phronemophobic/clong "0.9.1"]
+[com.phronemophobic/clong "1.0"]
+;; only needed for parsing. not needed for generation
+[org.bytedeco/llvm-platform "16.0.4-1.5.9"]
 ```
 
 deps.edn dependency:
 
 ```clojure
-com.phronemophobic/clong {:mvn/version "0.9.1"}
+com.phronemophobic/clong {:mvn/version "1.0"}
+;; only needed for parsing. not needed for generation
+org.bytedeco/llvm-platform {:mvn/version "16.0.4-1.5.9"}
 ```
-
-### Obtaining libclang
-
-#### Linux
-
-You can install libclang with:
-
-```sh
-apt install build-essential libclang-dev clang
-```
-#### Mac OSX
-
-It's harder than it should be to acquire libclang. I couldn't find a package for mac osx, but it was easy to build locally from https://github.com/llvm/llvm-project. I built the project with the following configuration:
-
-```
-mkdir build
-cd build
-cmake -G 'Unix Makefiles' -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=`pwd`/out -DLLVM_ENABLE_PROJECTS="clang" ../llvm
-make
-make install
-```
-
-### Setup
-
-Parsing header files requires libclang to be available on the `jna.library.path`. You can set the `jna.library.path` by adding the following to an alias:
-```
-:jvm-opts ["-Djna.library.path=/my/lib/path"]
-```
-
-Note: libclang is only required for parsing. If an api specification has been pre-generated, then the api can be generated without libclang as a dependency.
 
 ### Parsing
 
@@ -63,7 +37,7 @@ Note: libclang is only required for parsing. If an api specification has been pr
      (map cursor-info))
 ```
 
-To get a flavor of some of the data that can be extracted, check out clong's [datafied version of the libclang API](https://github.com/phronmophobic/clong/blob/main/resources/clang-api.edn).
+To get a flavor of some of the data that can be extracted, check out clong's [datafied version of the libclang API](https://github.com/phronmophobic/clong/blob/18c61d4a20a6d03e47ec49ef65b72c8baf465c39/resources/com/phronemophobic/clong/clang/api.edn).
 
 ### Generating APIs
 
