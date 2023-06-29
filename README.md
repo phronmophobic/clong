@@ -58,9 +58,11 @@ Note: libclang is only required for parsing. If an api specification has been pr
 
 `parse` returns a CXCursor. Further processing can be done via the raw api in `com.phronemophobic.clong.clang.jna.raw`. For basic usage, just use:
 ```clojure
-(->> (parse "myheader.h" [])
-     get-children
-     (map cursor-info))
+(require '[com.phronemophobic.clong.clang :as clang])
+
+(def results (->> (clang/parse "my-header.h" clang/default-arguments)
+                  clang/get-children
+                  (map clang/cursor-info)))
 ```
 
 To get a flavor of some of the data that can be extracted, check out clong's [datafied version of the libclang API](https://github.com/phronmophobic/clong/blob/main/resources/clang-api.edn).
