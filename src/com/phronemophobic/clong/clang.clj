@@ -165,6 +165,9 @@
       ;; c/CXType_NullPtr
       ;; c/CXType_Complex
 
+      ;; A type whose specific kind is not exposed via this interface
+      c/CXType_Half :coffi.mem/type-half
+
       c/CXType_Pointer (let [pointee-type (-> (c/clang_getPointeeType type)
                                               (c/clang_getCanonicalType))
                              pointee-type-kind (-> pointee-type
