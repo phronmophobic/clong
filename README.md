@@ -83,6 +83,7 @@ Examples can be found in the [examples directory](https://github.com/phronmophob
 - [freetype](https://github.com/phronmophobic/clong/tree/main/examples/freetype)
 - [lmdb](https://github.com/phronmophobic/clong/tree/main/examples/lmdb)
 - [glfw](https://github.com/phronmophobic/clj-glfw)
+- [llama.clj](https://github.com/phronmophobic/llama.clj)
 
 Other projects using clong:
 - [clj-graphviz](https://github.com/phronmophobic/clj-graphviz)
