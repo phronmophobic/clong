@@ -32,9 +32,9 @@
 (setenv "LIBCLANG_DISABLE_CRASH_RECOVERY" "1" 0)
 
 (import 'org.bytedeco.llvm.global.clang)
-;; This causes libclang to be loaded into the process.
-;; Any function would do, but this is a particularly easy example.
-(clang/clang_getNullCursor)
+;; need to initialize class instance because native libraries
+;;   are loaded in static initializers
+(clang.)
 
 (import 'org.bytedeco.javacpp.Loader)
 
