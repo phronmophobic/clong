@@ -26,7 +26,7 @@ com.phronemophobic/clong {:mvn/version "1.1"}
 org.bytedeco/llvm-platform {:mvn/version "16.0.4-1.5.9"}
 ```
 
-_Note: If you receive an error like "Error building classpath. Could not acquire write lock for[...]" while downloading deps. Try deleting the maven dep and retrying with `-Sthreads 1` to workaround this [issue](https://clojure.atlassian.net/browse/TDEPS-244)._
+_Note: If you receive an error like "Error building classpath. Could not acquire write lock for[...]" while downloading deps, try deleting the maven dep and retrying with `-Sthreads 1` to workaround this [issue](https://clojure.atlassian.net/browse/TDEPS-244)._
 
 ```
 rm -rf ~/.m2/repository/org/bytedeco/
