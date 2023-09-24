@@ -26,6 +26,13 @@ com.phronemophobic/clong {:mvn/version "1.1"}
 org.bytedeco/llvm-platform {:mvn/version "16.0.4-1.5.9"}
 ```
 
+_Note: If you receive an error like "Error building classpath. Could not acquire write lock for[...]" while downloading deps. Try deleting the maven dep and retrying with `-Sthreads 1` to workaround this [issue](https://clojure.atlassian.net/browse/TDEPS-244)._
+
+```
+rm -rf ~/.m2/repository/org/bytedeco/
+clj -Sthreads 1 -P
+```
+
 ### Parsing
 
 `com.phronemophobic.clong.clang/parse` takes a header filename and the command line args to pass to clang. The most common command line args are `"-I/my/header/path"`. If you built clang locally, then you may also need to add system paths. You can see the system paths that you may by running `clang -### empty-file.h` from the command line.
