@@ -593,3 +593,53 @@
     )
 
   )
+
+(def TYPE-TREE
+  "Specter navigator that will visit the current type
+  and all the related types of a
+  compound type (ie. pointers, arrays, functions, etc)."
+  (specter/recursive-path
+   [] p
+   (specter/if-path
+    vector?
+    (specter/cond-path
+     (fn [t]
+       (and (#{:coffi.mem/pointer
+               :coffi.mem/array} (first t))
+            (second t)))
+     (specter/continue-then-stay [(specter/nthpath 1) p])
+
+     (fn [t]
+       (and (= :coffi.ffi/fn (first t))
+            (>= (count t) 3)))
+     (specter/continue-then-stay
+      (specter/multi-path
+       ;; args
+       [(specter/nthpath 1) specter/ALL p]
+       ;; ret
+       [(specter/nthpath 2) p]))
+
+     ;; else
+     (constantly true) specter/STAY)
+
+    ;; else
+    specter/STAY)))
+
+(def FUNCTION-TYPES
+  "Specter navigator that visits all types of a functoin definition."
+  (specter/multi-path
+   (specter/keypath :function/ret)
+   (specter/path (specter/keypath :function/args) specter/ALL)))
+(def STRUCT-TYPES
+  "Specter navigator that visits all types of a struct definition."
+  [(specter/keypath :fields)
+   specter/ALL
+   (specter/keypath :datatype)])
+
+(def ALL-TYPES
+  "Specter navigator that visits all types of an api."
+  (specter/multi-path
+   (specter/path
+     :functions specter/ALL FUNCTION-TYPES)
+   (specter/path
+     :structs specter/ALL STRUCT-TYPES)))
