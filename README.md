@@ -21,7 +21,7 @@ Leiningen dependency:
 deps.edn dependency:
 
 ```clojure
-com.phronemophobic/clong {:mvn/version "1.1"}
+com.phronemophobic/clong {:mvn/version "1.2"}
 ;; only needed for parsing. not needed for generation
 org.bytedeco/llvm-platform {:mvn/version "16.0.4-1.5.9"}
 ```
