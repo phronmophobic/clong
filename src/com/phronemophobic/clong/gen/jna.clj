@@ -28,7 +28,9 @@
 
            clojure.java.api.Clojure
            clojure.lang.IFn
-           clojure.lang.ILookup))
+           clojure.lang.ILookup
+           clojure.lang.Seqable
+           clojure.lang.ISeq))
 
 (def ^:no-doc main-class-loader @clojure.lang.Compiler/LOADER)
 (def ^:no-doc void Void/TYPE)
@@ -189,6 +191,20 @@
   ([s k]
    (.readField ^Structure s (name k))))
 
+
+
+(defn ^:private structure_seq
+  ([^Structure s]
+   (let [fields (.getFieldOrder s)]
+     (map (fn [field-name]
+            (reify
+              java.util.Map$Entry
+              (getKey [_]
+                (keyword field-name))
+              (getValue [_]
+                (get s field-name))))
+          fields))))
+
 (defn field-name [field]
   (let [fname (:name field)]
     ;; sometimes, field names are empty
@@ -251,6 +267,23 @@
 
 
                [[:return]]))}
+      {:name :getFieldOrder
+       :flags #{:public}
+       :desc [List]
+       :emit
+       (concat
+        [[:new java.util.ArrayList]
+         [:dup]
+         [:invokespecial java.util.ArrayList :init [:void]]
+         [:astore 1]]
+        (mapcat (fn [field]
+                  [[:aload 1]
+                   [:ldc (field-name field)]
+                   [:invokevirtual java.util.ArrayList "add" [Object :boolean]]
+                   [:pop]])
+                fields)
+        [[:aload 1]
+         [:areturn]])}
       {:name :valAt
        :desc [Object Object]
        :emit
@@ -258,6 +291,13 @@
         [:aload 0]
         [:aload 1]
         [:invokeinterface IFn "invoke" [Object Object Object]]
+        [:areturn]]}
+      {:name :seq
+       :desc [ISeq]
+       :emit
+       [(load-var-inst `structure_seq)
+        [:aload 0]
+        [:invokeinterface IFn "invoke" [Object Object]]
         [:areturn]]}]
      
      :annotations {com.sun.jna.Structure$FieldOrder
@@ -266,12 +306,12 @@
 (defn struct->class-by-ref [struct-prefix struct]
   (assoc (struct->class-def* struct-prefix struct)
          :name (symbol (str struct-prefix "." (name (:id struct)) "ByReference"))
-         :interfaces [Structure$ByReference ILookup]))
+         :interfaces [Structure$ByReference ILookup Seqable]))
 
 (defn struct->class-by-value [struct-prefix struct]
   (assoc (struct->class-def* struct-prefix struct)
          :name (symbol (str struct-prefix "." (name (:id struct))))
-         :interfaces [Structure$ByValue ILookup]))
+         :interfaces [Structure$ByValue ILookup Seqable]))
 
 (defn def-struct [struct-prefix struct]
   (let [by-ref-def (struct->class-by-ref struct-prefix struct)
