@@ -3,7 +3,7 @@ on:
     workflow_dispatch:
 jobs:
   build:
-
+    environment: Actions
     runs-on: ubuntu-latest
 
     steps:
