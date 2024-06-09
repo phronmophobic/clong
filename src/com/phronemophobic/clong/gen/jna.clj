@@ -100,6 +100,8 @@
         :coffi.mem/array
         [(coffi-type->insn-type struct-prefix (second t))])
       
+      (class? t)
+      t
 
       (keyword? t)
       (if (= "coffi.mem" (namespace t))
