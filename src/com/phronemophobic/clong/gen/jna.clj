@@ -471,6 +471,11 @@
   (when *compile-files*
     ((requiring-resolve 'com.phronemophobic.clong.gen.jna.insn/def-struct)
      struct-prefix
+     struct))
+  (if-compiling
+    nil
+    ((requiring-resolve 'com.phronemophobic.clong.gen.jna.insn/def-struct)
+     struct-prefix
      struct)))
 
 (defmacro def-structs [structs struct-prefix]
