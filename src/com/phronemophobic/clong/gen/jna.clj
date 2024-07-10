@@ -52,18 +52,6 @@
   ([s k]
    (.readField ^Structure s (name k))))
 
-(defn ^:private structure_seq
-  ([^Structure s]
-   (let [fields (.getFieldOrder s)]
-     (map (fn [field-name]
-            (reify
-              java.util.Map$Entry
-              (getKey [_]
-                (keyword field-name))
-              (getValue [_]
-                (get s field-name))))
-          fields))))
-
 (defn ^:private type-desc [struct-prefix t]
   (case t
     :coffi.mem/char "B"
@@ -111,7 +99,7 @@
         (str "[" (type-desc (second t))))
       
       (class? t)
-      (str "L" (str/replace (.getName t) #"\." "/")  ";")
+      (str "L" (str/replace (.getName ^Class t) #"\." "/")  ";")
 
       (keyword? t)
       (if (= "coffi.mem" (namespace t))
@@ -227,7 +215,7 @@
        (preserve! f#)
        (preserve!
         (reify
-          ~(symbol (.getName interface))
+          ~(symbol (.getName ^Class interface))
           (~'callback [this# ~@args]
            (.setContextClassLoader (Thread/currentThread) @main-class-loader)
            (f# ~@args)))))))
@@ -250,7 +238,7 @@
     :coffi.mem/pointer (fn [o]
                          (cond
                            (instance? com.sun.jna.Structure$ByReference o)
-                           (.getPointer o)
+                           (.getPointer ^Structure o)
 
                            (not (or (nil? o)
                                     (string? o)
