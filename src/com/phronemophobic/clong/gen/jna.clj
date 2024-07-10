@@ -496,6 +496,7 @@
 
 
 (defmacro def-api-lazy
+  "Same as `def-api`, but `lib` should be derefable to a NativeLibrary."
   ([lib api]
    `(def-api-lazy ~lib ~api ~(ns-struct-prefix *ns*)))
   ([lib api struct-prefix]
