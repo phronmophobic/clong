@@ -24,6 +24,12 @@
                 :lib lib
                 :version version
                 :basis basis
+                :pom-data
+                [[:licenses
+                  [:license
+                   [:name "Eclipse Public License 1.0"]
+                   [:url "https://opensource.org/license/epl-1-0/"]
+                   [:distribution "repo"]]]]
                 :src-dirs ["src"]})
   (b/copy-dir {:src-dirs ["src" "resources"]
                :target-dir class-dir})
