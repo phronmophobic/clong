@@ -3,7 +3,7 @@
             [clojure.string :as str]
             [clojure.pprint :refer [pprint]]
             [clojure.edn :as edn]
-            [com.phronemophobic.clong.clang :as clong]
+            [clong.libz.gen-api :as api]
             [com.phronemophobic.clong.gen.jna :as gen])
   (:import
    java.io.PushbackReader
@@ -15,31 +15,31 @@
   (:gen-class))
 
 (def libz
-  (com.sun.jna.NativeLibrary/getInstance "z"))
+  (delay
+    (println "loaded!")
+    (com.sun.jna.NativeLibrary/getInstance "z")))
 
-(def api (clong/easy-api (.getCanonicalPath (io/file "resources"
-                                                     "zlib.h"))))
+(def api (api/load-api))
 
-(gen/def-api libz api)
+(gen/def-api-lazy libz api)
 
-(zlibVersion) ;; "1.2.11"
+(defn -main [& args]
+  (let [_ (prn (zlibVersion)) ;; "1.2.11"
 
-(def source "clong!")
+        source "clong!"
 
-(def dest (byte-array 255))
-(def dest-size* (doto (LongByReference.)
-                  (.setValue (alength dest))))
+        dest (byte-array 255)
+        dest-size* (doto (LongByReference.)
+                     (.setValue (alength dest)))
 
-(compress  dest dest-size* source (count source)) ;; 0
+        _ (prn (compress  dest dest-size* source (count source))) ;; 0
 
-(.getValue dest-size*) ;; 14
+        _ (prn (.getValue dest-size*)) ;; 14
 
-(def dest2 (byte-array (count source)))
-(def dest2-size* (doto (LongByReference.)
-                   (.setValue (alength dest2))))
-(uncompress dest2 dest2-size* dest (.getValue dest-size*)) ;; 0
+        dest2 (byte-array (count source))
+        dest2-size* (doto (LongByReference.)
+                      (.setValue (alength dest2)))
+        _ (prn (uncompress dest2 dest2-size* dest (.getValue dest-size*))) ;; 0
 
-(String. dest2) ;; "clong!"
-
-
-(defn -main [& args])
+        _ (prn (String. dest2)) ;; "clong!"
+        ]))

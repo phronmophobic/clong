@@ -2,6 +2,13 @@
 
 Example usage of clong with lib
 
+## Native image compilation
+
+```bash
+clojure -T:build uber
+./compile_native.sh
+```
+
 ## License
 
 Copyright © 2022 Adrian

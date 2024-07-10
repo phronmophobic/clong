@@ -1,6 +1,13 @@
 {:paths ["src" "resources"]
  :deps {org.clojure/clojure {:mvn/version "1.10.3"}
-        org.bytedeco/llvm-platform {:mvn/version "16.0.4-1.5.9"}
-        com.phronemophobic/clong {:local/root "../../"
-                                  ;; :mvn/version "0.9.3"
-                                  }}}
+        com.github.clj-easy/graal-build-time {:mvn/version "1.0.5"}
+        com.phronemophobic/clong {;; :local/root "../../"
+                                  :mvn/version "0.9.3"
+                                  ;; :local/root "../../target/clong-1.3.jar"
+                                  }}
+ :aliases
+ {:build {:deps {io.github.clojure/tools.build {:mvn/version "0.9.5"}
+                 slipset/deps-deploy {:mvn/version "RELEASE"}}
+          :ns-default build}
+  :dump-api {:extra-deps {org.bytedeco/llvm-platform {:mvn/version "16.0.4-1.5.9"}}
+             :exec-fn clong.libz.gen-api/dump-api}}}

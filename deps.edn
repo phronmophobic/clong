@@ -13,7 +13,7 @@
  {:test {:extra-paths ["test"]
          :extra-deps {org.clojure/test.check {:mvn/version "1.1.0"}}}
 
-  :build {:deps {io.github.clojure/tools.build {:mvn/version "0.9.5"}
+  :build {:deps {io.github.clojure/tools.build {:mvn/version "0.10.4"}
                  slipset/deps-deploy {:mvn/version "RELEASE"}}
           :ns-default build}
 
