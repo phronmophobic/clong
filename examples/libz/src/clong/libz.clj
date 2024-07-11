@@ -16,7 +16,6 @@
 
 (def libz
   (delay
-    (println "loaded!")
     (com.sun.jna.NativeLibrary/getInstance "z")))
 
 (def api (api/load-api))
