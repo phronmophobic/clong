@@ -2,8 +2,6 @@
   (:require [clojure.string :as str]
             [clojure.java.io :as io]
             [clojure.pprint :refer [pprint]]
-            [insn.util :as insn-util]
-            [insn.core :as insn]
             [com.rpl.specter :as specter]
             [clojure.edn :as edn])
   (:import java.io.PushbackReader
@@ -116,16 +114,11 @@
         ;;else
         (str "L" (str/replace struct-prefix #"\." "/") "/" (name t) ";")))))
 
-
-
 (defn hash-string [input]
   (let [md (MessageDigest/getInstance "SHA-256")
         _ (.update md (.getBytes input))
         digest (.digest md)]
     (format "%064x" (BigInteger. 1 digest))))
-
-;; Example usage:
-(hash-string "your-string-here")
 
 (defn callback-name [struct-prefix ret-type arg-types]
   (str/replace
