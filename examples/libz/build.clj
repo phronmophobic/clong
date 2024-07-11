@@ -50,3 +50,19 @@
            :main 'clong.libz}))
 
 
+(defn uber-qsort [_]
+  (clean nil)
+  (b/copy-dir {:src-dirs ["src" "resources"]
+               :target-dir class-dir})
+  (b/compile-clj {:basis (b/create-basis basis*)
+                  :ns-compile '[clong.qsort]
+                  :class-dir class-dir
+                  :jvm-opts ["-Dtech.v3.datatype.graal-native=true"
+                             "-Dclojure.compiler.direct-linking=true"
+                             "-Dclojure.spec.skip-macros=true"]})
+  (b/uber {:class-dir class-dir
+           :uber-file uber-file
+           :basis (b/create-basis basis*)
+           :main 'clong.qsort}))
+
+

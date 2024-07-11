@@ -1,4 +1,10 @@
 [
+{
+  "name":"com.sun.jna.CallbackProxy",
+  "methods":[{"name":"callback","parameterTypes":["java.lang.Object[]"] }]
+},
+
+
   {
     "condition": {
       "typeReachable": "com.sun.jna.Native"

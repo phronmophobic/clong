@@ -1,4 +1,15 @@
 [
+{
+  "name":"clong.qsort.structs.callback_f4737eb2cfe7a0d1af88064384f03bcca4366a715a2105486fb7b17ec4fef17d",
+  "queryAllDeclaredMethods":true,
+  "queryAllPublicMethods":true,
+  "methods":[{"name":"callback","parameterTypes":["com.sun.jna.Pointer","com.sun.jna.Pointer"] }]
+},
+{
+  "name":"com.sun.jna.Pointer",
+  "queryAllPublicMethods":true,
+  "methods":[{"name":"getByte","parameterTypes":["long"] }]
+},
   {
     "condition": {
       "typeReachable": "com.sun.jna.CallbackReference"
