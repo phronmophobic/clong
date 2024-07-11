@@ -9,6 +9,12 @@ clojure -T:build uber
 ./compile_native.sh
 ```
 
+Usage:
+
+```bash
+./target/libz
+```
+
 ## License
 
 Copyright © 2022 Adrian
