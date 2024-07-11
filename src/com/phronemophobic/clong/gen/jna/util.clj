@@ -30,7 +30,9 @@
            clojure.lang.IFn
            clojure.lang.ILookup
            clojure.lang.Seqable
-           clojure.lang.ISeq))
+           clojure.lang.ISeq
+           (java.security MessageDigest)
+           (java.math BigInteger)))
 
 
 
@@ -115,16 +117,27 @@
         (str "L" (str/replace struct-prefix #"\." "/") "/" (name t) ";")))))
 
 
+
+(defn hash-string [input]
+  (let [md (MessageDigest/getInstance "SHA-256")
+        _ (.update md (.getBytes input))
+        digest (.digest md)]
+    (format "%064x" (BigInteger. 1 digest))))
+
+;; Example usage:
+(hash-string "your-string-here")
+
 (defn callback-name [struct-prefix ret-type arg-types]
   (str/replace
    (munge
     (str
      "callback_"
-     (str/join
-      "_"
-      (eduction
-       (map #(type-desc struct-prefix %))
-       (into [ret-type] arg-types)))))
+     (hash-string
+      (str/join
+       "_"
+       (eduction
+        (map #(type-desc struct-prefix %))
+        (into [ret-type] arg-types))))))
    #"[;]"
    "_SEMI_COLON_"))
 
