@@ -4,6 +4,7 @@
             [clojure.pprint :refer [pprint]]
             [insn.util :as insn-util]
             [insn.core :as insn]
+            [com.phronemophobic.clong.gen.jna.util :as util]
             [com.rpl.specter :as specter]
             [clojure.edn :as edn])
   (:import java.io.PushbackReader
@@ -194,7 +195,7 @@
       {:name :valAt
        :desc [Object Object]
        :emit
-       [(load-var-inst `structure_valAt)
+       [(load-var-inst `util/structure_valAt)
         [:aload 0]
         [:aload 1]
         [:invokeinterface IFn "invoke" [Object Object Object]]
@@ -202,7 +203,7 @@
       {:name :seq
        :desc [ISeq]
        :emit
-       [(load-var-inst `structure_seq)
+       [(load-var-inst `util/structure_seq)
         [:aload 0]
         [:invokeinterface IFn "invoke" [Object Object]]
         [:areturn]]}]
@@ -211,16 +212,15 @@
                    (mapv field-name fields)}}))
 
 
-
 (defn struct->class-by-ref [struct-prefix struct]
   (assoc (struct->class-def* struct-prefix struct)
          :name (symbol (str struct-prefix "." (name (:id struct)) "ByReference"))
-         :interfaces [Structure$ByReference ILookup Seqable]))
+         :interfaces [Structure$ByReference ILookup Seqable com.phronemophobic.clong.gen.jna.util.IGetFieldOrder]))
 
 (defn struct->class-by-value [struct-prefix struct]
   (assoc (struct->class-def* struct-prefix struct)
          :name (symbol (str struct-prefix "." (name (:id struct))))
-         :interfaces [Structure$ByValue ILookup Seqable]))
+         :interfaces [Structure$ByValue ILookup Seqable com.phronemophobic.clong.gen.jna.util.IGetFieldOrder]))
 
 (defn def-struct [struct-prefix struct]
   (let [by-ref-def (struct->class-by-ref struct-prefix struct)
@@ -234,76 +234,10 @@
     (insn/define by-ref-def)
     (insn/define by-value-def)))
 
-(defn ^:private type-desc [struct-prefix t]
-  (case t
-    :coffi.mem/char "B"
-    :coffi.mem/short "S"
-    :coffi.mem/int "I"
-    :coffi.mem/long "J"
-    :coffi.mem/float "F"
-    :coffi.mem/double "D"
-    :coffi.mem/pointer "Lcom/sun/jna/Pointer;"
-    :coffi.mem/void "V"
-
-    (cond
-      (vector? t)
-      (case (first t)
-        :coffi.mem/pointer
-        (let [ptype (second t)]
-          (case ptype
-            :coffi.mem/char "Lcom/sun/jna/ptr/ByteByReference;"
-            :coffi.mem/short  "Lcom/sun/jna/ptr/ShortByReference;"
-            :coffi.mem/int "Lcom/sun/jna/ptr/IntByReference;"
-            :coffi.mem/long "Lcom/sun/jna/ptr/LongByReference;"
-            :coffi.mem/float "Lcom/sun/jna/ptr/FloatByReference;"
-            :coffi.mem/double "Lcom/sun/jna/ptr/DoubleByReference;"
-            :coffi.mem/pointer "Lcom/sun/jna/ptr/PointerByReference;"
-
-            ;; else
-            (if-not (keyword ptype)
-              "Lcom/sun/jna/Pointer;"
-              (cond
-                (= ptype :coffi.mem/char)
-                "Ljava/lang/String;"
-
-                (not= "coffi.mem"
-                      (namespace ptype))
-                (str "L" (str/replace struct-prefix #"\." "/") "/" (name ptype) "ByReference;")
-
-                :else "Lcom/sun/jna/Pointer;"))))
-
-
-        :coffi.ffi/fn "Lcom/sun/jna/Pointer;"
-        ;; Callback is abstract. Need specific type info to be useful
-        ;;com.sun.jna.Callback
-        
-        :coffi.mem/array
-        (str "[" (type-desc (second t))))
-      
-      (class? t)
-      (str "L" (str/replace (.getName t) #"\." "/")  ";")
-
-      (keyword? t)
-      (if (= "coffi.mem" (namespace t))
-        (throw (ex-info "Unknown coffi type."
-                        {:t t}))
-        ;;else
-        (str "L" (str/replace struct-prefix #"\." "/") "/" (name t) ";")))))
-
-(defn ^:private callback-name [struct-prefix ret-type arg-types]
-  (munge
-   (str
-    "callback_"
-    (str/join
-     "_"
-     (eduction 
-      (map #(type-desc struct-prefix %))
-      (into [ret-type] arg-types))))))
-
 (defn make-callback-interface* [struct-prefix ret-type arg-types]
   {:flags #{:public :interface}
    :interfaces [Callback]
-   :name (symbol (str struct-prefix "." (callback-name struct-prefix ret-type arg-types)))
+   :name (symbol (str struct-prefix "." (util/callback-name struct-prefix ret-type arg-types)))
    :methods [{:flags #{:public :abstract}
               :name "callback"
               :desc
@@ -311,9 +245,11 @@
                     (coffi-type->insn-type struct-prefix ret-type))}]})
 
 (defn make-callback-interface [struct-prefix ret-type arg-types]
-  (when *compile-files*
-    (insn/write (make-callback-interface* struct-prefix ret-type arg-types)))
-  (insn/define (make-callback-interface* struct-prefix ret-type arg-types)))
+  (let [class-def (make-callback-interface* struct-prefix ret-type arg-types)]
+    (when *compile-files*
+      (let [info (insn/visit class-def)]
+        (insn/write info)))
+    (insn/define class-def)))
 
 
 (comment
