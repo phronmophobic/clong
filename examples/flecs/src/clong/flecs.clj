@@ -1,6 +1,5 @@
 (ns clong.flecs
   (:require [clojure.java.io :as io]
-            [clojure.string :as str]
             [clojure.pprint :refer [pprint]]
             [clojure.edn :as edn]
             [com.phronemophobic.clong.clang :as clang]))
