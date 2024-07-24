@@ -3,7 +3,7 @@
             [clojure.string :as str]
             [clojure.pprint :refer [pprint]]
             [clojure.edn :as edn]
-            [com.phronemophobic.clong.clang :as clong]
+            [com.phronemophobic.clong.clang :as clang]
             [com.phronemophobic.clong.gen.jna :as gen])
   (:import
    java.io.PushbackReader
@@ -17,7 +17,7 @@
 (def ^:no-doc libfreetype
   (com.sun.jna.NativeLibrary/getInstance "freetype"))
 
-(def api (clong/easy-api "/opt/local/include/freetype2/freetype/freetype.h"
+(def api (clang/easy-api "/opt/local/include/freetype2/freetype/freetype.h"
                          ["-I/opt/local/include/freetype2/"]))
 
 (gen/def-api libfreetype api)

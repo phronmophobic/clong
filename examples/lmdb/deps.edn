@@ -1,6 +1,7 @@
 {:paths ["src" "resources"]
  :deps {org.clojure/clojure {:mvn/version "1.10.3"}
-        com.phronemophobic/clong {:local/root "../../"}}
+        com.phronemophobic/clong {:local/root "../../"}
+        org.bytedeco/llvm-platform {:mvn/version "16.0.4-1.5.9"}}
  :aliases
  {:project
-  {:jvm-opts ["-Djna.library.path=../../../llvm-project/build/out/lib:/opt/local/lib"]}}}
+  {:jvm-opts ["-Djna.library.path=/opt/local/lib"]}}}

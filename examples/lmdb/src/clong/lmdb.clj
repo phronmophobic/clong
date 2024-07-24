@@ -3,7 +3,7 @@
             [clojure.string :as str]
             [clojure.pprint :refer [pprint]]
             [clojure.edn :as edn]
-            [com.phronemophobic.clong.clang :as clong]
+            [com.phronemophobic.clong.clang :as clang]
             [com.phronemophobic.clong.gen.jna :as gen])
   (:import
    java.io.PushbackReader
@@ -18,7 +18,7 @@
 (def ^:no-doc liblmdb
   (com.sun.jna.NativeLibrary/getInstance "lmdb"))
 
-(def api (clong/easy-api "/opt/local/include/lmdb.h"))
+(def api (clang/easy-api "/opt/local/include/lmdb.h"))
 
 (gen/def-api liblmdb api)
 (gen/import-structs! api)

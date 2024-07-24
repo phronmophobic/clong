@@ -53,10 +53,19 @@ To get a flavor of some of the data that can be extracted, check out clong's [da
 Below is how clong can be used to generate a wrapper for libz ([full example](https://github.com/phronmophobic/clong/tree/master/examples/libz)):
 
 ```clojure
+(require '[clojure.java.io :as io]
+         '[clojure.string :as str]
+         '[clojure.pprint :refer [pprint]]
+         '[clojure.edn :as edn]
+         '[com.phronemophobic.clong.clang :as clang]
+         '[com.phronemophobic.clong.gen.jna :as gen])
+
+(import 'com.sun.jna.ptr.LongByReference)
+
 (def libz
   (com.sun.jna.NativeLibrary/getInstance "z"))
 
-(def api (clong/easy-api "/opt/local/include/zlib.h"))
+(def api (clang/easy-api "/opt/local/include/zlib.h"))
 
 (gen/def-api libz api)
 
