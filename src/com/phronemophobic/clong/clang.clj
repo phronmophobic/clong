@@ -94,14 +94,11 @@
             ]
         (keyword "clong" struct-name)))))
 
-;; not sure this right
 (defn union-type? [t]
-  (let [t (c/clang_getCanonicalType t)]
-    (when (= c/CXType_Record (.kind t))
-      (let [fields (get-fields t)]
-        (and (pos? (count fields))
-             (every? zero?
-                     (map c/clang_Cursor_getOffsetOfField fields)))))))
+  (let [t (c/clang_getCanonicalType t)
+        cur (c/clang_getTypeDeclaration t)]
+    (= c/CXCursor_UnionDecl
+       (:kind cur))))
 
 (defn coffi-integer-type [size]
   (case size
