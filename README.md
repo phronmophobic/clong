@@ -115,7 +115,7 @@ Additionally, clong was successfully able to generate a complete wrapper for the
 - Structs will not have any fields reported if _any_ of the struct's fields has an undetermined size. If fields for a struct are missing, you may need to include more headers or make sure the system's standard paths are included (try `clang -### empty-file.h` to see what system paths might be missing).
 - Clong doesn't offer any special support for automatic memory management of ffi data.
 - You can include additional headers using the `-include` argument when parsing
-- Parsing headers can be slow and you probably don't want to ship headers and libclang with your wrapper library. Generate the wrapper ahead of time and save the result as a edn resource that can be loaded. In the future, support for AOT may be added to better support this.
+- Parsing headers can be slow and you probably don't want to ship headers and libclang with your wrapper library. Generate the wrapper ahead of time and save the result as a edn resource that can be loaded. It is also possible to AOT generated interfaces so that the llvm and insn dependencies are required for downstream consumers.
 - JNA has issues with writing to StructureByReference fields. In some cases, it's useful to override structure fields to be raw pointers.
 
 ## Future Work
@@ -123,11 +123,12 @@ Additionally, clong was successfully able to generate a complete wrapper for the
 - Improve documentation.
 - Add support for #define values.
 - Add support for other ffi libraries besides jna.
-- Improve support for references. Currently, there is support for structs by reference, but not for references to structs by reference.
-- Implement clojure data interfaces over structs.
-- Support AOT of wrappers.
+- [-] Implement clojure data interfaces over structs.
+- [X] Support AOT of wrappers.
+- Document AOT of wrappers.
+
 ## License
 
-Copyright © 2022 Adrian
+Copyright © 2022-2024 Adrian
 
 Distributed under the Eclipse Public License version 1.0.
