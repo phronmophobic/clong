@@ -484,3 +484,82 @@
      :functions specter/ALL FUNCTION-TYPES)
    (specter/path
      :structs specter/ALL STRUCT-TYPES)))
+
+
+;; optional struct helpers
+
+;; Special case for writing to ByReference fields
+;; coercing for function calls typically want pointers,
+;; but Stucture/.writeField wants the ByReference
+(defn struct-coercer [struct-prefix datatype]
+  (if (and (vector? datatype)
+           (= :coffi.mem/pointer (first datatype))
+           (keyword? (second datatype))
+           (= "clong" (namespace (second datatype))))
+    identity
+    (coercer struct-prefix datatype)))
+
+(defn def-struct-constructor [struct-prefix struct]
+  (let [sname (name (:id struct))
+        sname-by-reference (str sname "ByReference")
+
+        classname (str struct-prefix "." sname)
+        classname-by-reference (str struct-prefix "." sname-by-reference)
+
+        new-struct `(~(symbol (str classname ".")))
+        new-struct-by-reference `(~(symbol (str classname-by-reference ".")))
+
+        doc-stringf (fn [sname]
+                      (str "Allocates a new " sname ".\n\n"
+                           "fields:\n"
+                           (str/join "\n"
+                                     (eduction
+                                      (map (fn [field]
+                                             (str "`:" (:name field) "` " (:type field))))
+                                      (:fields struct)))))
+
+        fname (symbol (str "map->" sname))
+        fname-by-reference (symbol (str "map->" sname-by-reference))
+
+
+
+        argmap {:keys
+                (into []
+                      (map (fn [field]
+                             (symbol (:name field))))
+                      (:fields struct))
+                :as 'm}]
+    `(let [coercer-by-key#
+           ~(into {}
+                  (map (fn [field]
+                         [(keyword (:name field))
+                          `(struct-coercer ~struct-prefix ~(:datatype field) )]))
+                  (:fields struct))]
+
+       (defn ~fname ~(doc-stringf sname) [~argmap]
+         (let [struct# ~new-struct]
+           (doseq [[k# v#] ~'m]
+             (.writeField struct# (name k#) ((coercer-by-key# k#) v#)))
+           struct#))
+       (defn ~fname-by-reference ~(doc-stringf sname-by-reference) [~argmap]
+         (let [struct# ~new-struct-by-reference]
+           (doseq [[k# v#] ~'m]
+             (let [coercer# (coercer-by-key# k#)]
+               (assert coercer# (str "No coercer for " ~sname ": " k#))
+               (.writeField struct# (name k#) (coercer# v#))))
+           struct#)))))
+
+(defn def-struct-constructors* [struct-prefix structs]
+  `(let [struct-prefix# ~struct-prefix]
+     (run!
+      (fn [struct#]
+        ;; (clojure.pprint/pprint (def-struct-constructor struct-prefix# struct#))
+        (eval (def-struct-constructor struct-prefix# struct#)))
+      ~structs)))
+
+(defmacro def-struct-constructors
+  ([structs]
+   `(def-struct-constructors ~structs ~(ns-struct-prefix *ns*) ))
+  ([structs struct-prefix]
+   (def-struct-constructors* struct-prefix structs)))
+
