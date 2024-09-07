@@ -88,6 +88,10 @@
                 (not= "coffi.mem"
                       (namespace ptype))
                 (try
+                  ;; Class/forName initializes classes at runtime
+                  ;; on old versions of native-image, but import does not
+                  ;; (eval `(import ~(symbol (str struct-prefix "." (name ptype) "ByReference")) ))
+                  ;; sticking with Class/forName for now.
                   (Class/forName (str struct-prefix "." (name ptype) "ByReference"))
                   (catch java.lang.ClassNotFoundException e
                     Pointer))
@@ -105,6 +109,11 @@
         (throw (ex-info "Unknown coffi type."
                         {:t t}))
         ;;else
+
+        ;; Class/forName initializes classes at runtime
+        ;; on old versions of native-image, but import does not
+        ;; (eval `(import ~(symbol (str struct-prefix "." (name t))) ))
+        ;; sticking with Class/forName for now.
         (Class/forName
          (str struct-prefix "." (name t)))))))
 
