@@ -528,9 +528,8 @@
                                       (:fields struct)))))
 
         fname (symbol (str "map->" sname))
-        fname-by-reference (symbol (str "map->" sname-by-reference))
-
-
+        fname-by-reference (symbol (str "map->" (str sname "*")))
+        merge-fname (symbol (str "merge->" sname))
 
         argmap {:keys
                 (into []
@@ -544,19 +543,18 @@
                          [(keyword (:name field))
                           `(struct-coercer ~struct-prefix ~(:datatype field) )]))
                   (:fields struct))]
-
+       (defn ~merge-fname [~'struct ~argmap]
+         (preserve! (doseq [[k# v#] ~'m]
+            (let [coercer# (coercer-by-key# k#)]
+              (assert coercer# (str "No coercer for " ~sname ": " k#))
+              (.writeField ~'struct (name k#) (coercer# v#)))))
+         ~'struct)
        (defn ~fname ~(doc-stringf sname) [~argmap]
          (let [struct# ~new-struct]
-           (doseq [[k# v#] ~'m]
-             (.writeField struct# (name k#) ((coercer-by-key# k#) v#)))
-           struct#))
+           (~merge-fname struct# ~'m)))
        (defn ~fname-by-reference ~(doc-stringf sname-by-reference) [~argmap]
          (let [struct# ~new-struct-by-reference]
-           (doseq [[k# v#] ~'m]
-             (let [coercer# (coercer-by-key# k#)]
-               (assert coercer# (str "No coercer for " ~sname ": " k#))
-               (.writeField struct# (name k#) (coercer# v#))))
-           struct#)))))
+           (~merge-fname struct# ~'m))))))
 
 (defn def-struct-constructors* [struct-prefix structs]
   `(let [struct-prefix# ~struct-prefix]
