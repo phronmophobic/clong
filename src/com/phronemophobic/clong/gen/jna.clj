@@ -501,11 +501,19 @@
 ;; coercing for function calls typically want pointers,
 ;; but Stucture/.writeField wants the ByReference
 (defn struct-coercer [struct-prefix datatype]
-  (if (and (vector? datatype)
-           (= :coffi.mem/pointer (first datatype))
-           (keyword? (second datatype))
-           (= "clong" (namespace (second datatype))))
+  (cond
+
+    (and (vector? datatype)
+         (= :coffi.mem/pointer (first datatype))
+         (keyword? (second datatype))
+         (= "clong" (namespace (second datatype))))
     identity
+
+    (and (vector? datatype)
+         (= :coffi.ffi/fn (first datatype)))
+    identity
+
+    :else
     (coercer struct-prefix datatype)))
 
 (defn def-struct-constructor [struct-prefix struct]
