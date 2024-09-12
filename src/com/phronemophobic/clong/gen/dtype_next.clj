@@ -73,6 +73,20 @@
          :argtypes argtypes
          :doc doc-string}}))
 
+(defn clong-struct->dt-struct [s]
+  (let [id (-> s :id name keyword)
+        fields (into []
+                     (map (fn [field]
+                            {:name (-> field :name keyword)
+                             :datatype (-> field :datatype coffi-type->dtype)}))
+                     (:fields s))]
+    [id fields]))
+
+(defn api->structs [api]
+  (into []
+        (map clong-struct->dt-struct)
+        (:structs api)))
+
 (defn api->library-interface [api]
   (into {}
         (map clong-fn->dt-type-fn)
