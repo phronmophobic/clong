@@ -77,8 +77,15 @@
   (let [id (-> s :id name keyword)
         fields (into []
                      (map (fn [field]
-                            {:name (-> field :name keyword)
-                             :datatype (-> field :datatype coffi-type->dtype)}))
+                            (let [dtype (-> field
+                                            :datatype
+                                            coffi-type->dtype)
+                                  dtype (if (= dtype :pointer?)
+                                          ;; :pointer? is invalid for structs
+                                          :pointer
+                                          dtype)]
+                             {:name (-> field :name keyword)
+                              :datatype dtype})))
                      (:fields s))]
     [id fields]))
 
