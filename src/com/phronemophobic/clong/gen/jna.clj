@@ -573,6 +573,21 @@
       ~structs)))
 
 (defmacro def-struct-constructors
+  "Defines helpers for initializing and modifying structs. Uses class definitions generated using `def-api`.
+
+  Arguments:
+
+  `structs`: a sequence of struct definitions as returned by `easy-api` in the :structs attribute.
+  `struct-prefix`: if provided, should match the struct-prefix provided to `def-api`.
+
+  Result:
+
+  `def-struct-constructors` will define the following functions for each struct:
+
+  `map->{{struct-name}}`: returns the struct given a map.
+  `map->{{struct-name}}*`: returns the struct by reference given a map.
+  `merge->{{struct-name}}`: modifies the passed struct in place by writing the fields using the values given by a map. returns the struct.
+  "
   ([structs]
    `(def-struct-constructors ~structs ~(ns-struct-prefix *ns*) ))
   ([structs struct-prefix]
