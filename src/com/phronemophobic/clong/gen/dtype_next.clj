@@ -28,8 +28,8 @@
 
         :coffi.ffi/fn :pointer?
         ;;com.sun.jna.Callback
-        
-        :coffi.mem/array
+
+        ;; else
         (throw (ex-info "Unsupported coffi type."
                         {:t t})))
 
