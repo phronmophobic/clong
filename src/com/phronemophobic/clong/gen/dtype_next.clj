@@ -34,16 +34,33 @@
                         {:t t})))
 
       (keyword? t)
-      (if (= "coffi.mem" (namespace t))
+      (cond
+
+        (= "coffi.mem" (namespace t))
         (throw (ex-info "Unknown coffi type."
                         {:t t}))
-        ;;else
+
+        ;; struct definition
+        (= "clong" (namespace t))
+        t
+
+        :else
         (throw (ex-info "Unsupported coffi type."
                         {:t t}))))))
 
+
+(defn coffi-type->fn-dtype [t]
+  (cond
+    (and (keyword? t)
+         (= "clong" (namespace t)))
+    (list 'by-value (keyword (name t)))
+
+    :else
+    (coffi-type->dtype t)))
+
 (defn clong-fn->dt-type-fn [fdef]
   (let [kw (:id fdef)
-        rettype (coffi-type->dtype (:function/ret fdef))
+        rettype (coffi-type->fn-dtype (:function/ret fdef))
         argtypes (into []
                        (map-indexed
                         (fn [i [{:keys [spelling]} t]]
@@ -52,7 +69,7 @@
                                   spelling
                                   (str "__unnamed_arg_" i))]
                             [(symbol argname)
-                             (coffi-type->dtype t)])))
+                             (coffi-type->fn-dtype t)])))
                        (map vector
                             (:args fdef)
                             (:function/args fdef)))
@@ -73,19 +90,44 @@
          :argtypes argtypes
          :doc doc-string}}))
 
+(defn coffi-type->struct-dtype [t]
+  ;; same as coffi-type->dtype except
+  ;; arrays are also supported
+  ;; eg. [:coffi.mem/array :coffi.mem/char 4]
+  (let [{:keys [n-elems datatype]}
+        (if (and (vector? t)
+                 (= :coffi.mem/array (first t)))
+          (let [[_ array-datatype n-elems] t
+                datatype (coffi-type->dtype array-datatype)]
+            (when-not (number? n-elems)
+              (throw (ex-info "Array type missing number of elems."
+                              {:t t})))
+            {:n-elems n-elems :datatype datatype})
+          ;; else
+          (let [datatype (coffi-type->dtype t)]
+            {:n-elems 1 :datatype datatype}))
+
+        datatype (cond
+                   (and (keyword? datatype)
+                        (= "clong" (namespace datatype)))
+                   (keyword (name datatype))
+
+                   ;; :pointer? is invalid for structs
+                   (= :pointer? datatype)
+                   :pointer
+
+                   :else datatype)]
+    {:n-elems n-elems
+     :datatype datatype}))
+
 (defn clong-struct->dt-struct [s]
   (let [id (-> s :id name keyword)
         fields (into []
                      (map (fn [field]
                             (let [dtype (-> field
                                             :datatype
-                                            coffi-type->dtype)
-                                  dtype (if (= dtype :pointer?)
-                                          ;; :pointer? is invalid for structs
-                                          :pointer
-                                          dtype)]
-                             {:name (-> field :name keyword)
-                              :datatype dtype})))
+                                            coffi-type->struct-dtype)]
+                              (assoc dtype :name (-> field :name keyword)))))
                      (:fields s))]
     [id fields]))
 
@@ -121,3 +163,18 @@
         (map clong-fn->dt-type-fn)
         (:functions api)))
 
+(defn def-enum* [enum]
+  `(def ~(-> enum
+             :name
+             symbol)
+     ~@(when-let [doc (:raw-comment enum)]
+         (when (not= doc "")
+           [doc]))
+     (int ~(:value enum))))
+
+(defmacro def-enum [enum]
+  (def-enum* enum))
+
+(defmacro def-enums
+  ([api]
+   `(run! #(eval (def-enum* %)) (:enums ~api))))
