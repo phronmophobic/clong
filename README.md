@@ -105,6 +105,9 @@ Other projects using clong:
 - [glfw](https://github.com/phronmophobic/clj-glfw)
 - [llama.clj](https://github.com/phronmophobic/llama.clj)
 - [clj-media](https://github.com/phronmophobic/clj-media)
+- [clj-webgpu](https://github.com/phronmophobic/clj-webgpu)
+- [ggml.clj](https://github.com/phronmophobic/ggml.clj)
+- [whisper.clj](https://github.com/phronmophobic/whisper.clj)
 
 For a more complicated example, clong's [clang interface](https://github.com/phronmophobic/clong/blob/main/src/com/phronemophobic/clong/clang/jna/raw.clj) is [generated](https://github.com/phronmophobic/clong/blob/main/src/com/phronemophobic/clong/clang.clj#L546) by clong itself.
 
