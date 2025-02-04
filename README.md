@@ -2,7 +2,7 @@
 
 A wrapper for libclang and a generator that can turn c header files into clojure apis.
 
-Currently, there is only a generator for jna, but support for other ffi libs is likely.
+Supports jna and dtype-next. Support for other ffi libs is likely.
 
 ## Rationale
 
@@ -13,7 +13,7 @@ Writing wrappers for c libraries is tedious and error prone. The goal of clong i
 Leiningen dependency:
 
 ```clojure
-[com.phronemophobic/clong "1.4.2"]
+[com.phronemophobic/clong "1.4.3"]
 ;; only needed for parsing. not needed for generation
 [org.bytedeco/llvm-platform "16.0.4-1.5.9"]
 ```
@@ -21,7 +21,7 @@ Leiningen dependency:
 deps.edn dependency:
 
 ```clojure
-com.phronemophobic/clong {:mvn/version "1.4.2"}
+com.phronemophobic/clong {:mvn/version "1.4.3"}
 ;; only needed for parsing. not needed for generation
 org.bytedeco/llvm-platform {:mvn/version "16.0.4-1.5.9"}
 ```
@@ -105,6 +105,9 @@ Other projects using clong:
 - [glfw](https://github.com/phronmophobic/clj-glfw)
 - [llama.clj](https://github.com/phronmophobic/llama.clj)
 - [clj-media](https://github.com/phronmophobic/clj-media)
+- [clj-webgpu](https://github.com/phronmophobic/clj-webgpu)
+- [ggml.clj](https://github.com/phronmophobic/ggml.clj)
+- [whisper.clj](https://github.com/phronmophobic/whisper.clj)
 
 For a more complicated example, clong's [clang interface](https://github.com/phronmophobic/clong/blob/main/src/com/phronemophobic/clong/clang/jna/raw.clj) is [generated](https://github.com/phronmophobic/clong/blob/main/src/com/phronemophobic/clong/clang.clj#L546) by clong itself.
 
@@ -122,7 +125,8 @@ Additionally, clong was successfully able to generate a complete wrapper for the
 
 - Improve documentation.
 - Add support for #define values.
-- Add support for other ffi libraries besides jna.
+- Add generator that supports project panama.
+- [X] Add support for other ffi libraries besides jna.
 - [-] Implement clojure data interfaces over structs.
 - [X] Support AOT of wrappers.
 - Document AOT of wrappers.
