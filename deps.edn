@@ -7,7 +7,10 @@
         net.java.dev.jna/jna {:mvn/version "5.12.1"}
         insn/insn {:mvn/version "0.5.2"}
         net.n01se/clojure-jna {:mvn/version "1.0.0"}
-        aysylu/loom {:mvn/version "1.0.2"}
+        aysylu/loom {:mvn/version "1.0.2"
+                     ;; This brings in large, unnecessary clojurescript deps
+                     :exclusions [tailrecursion/cljs-priority-map]
+                     }
         com.rpl/specter {:mvn/version "1.1.4"}}
  :aliases
  {:test {:extra-paths ["test"]
