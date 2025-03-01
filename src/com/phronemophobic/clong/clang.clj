@@ -186,6 +186,15 @@
        (mapv clang-type->coffi
              (get-argument-types type))
        (clang-type->coffi (c/clang_getResultType type))]
+      
+      ;; This works with 0 arg functions. It will not act as expected if one passes multiple arguments to it.
+      ;; Generally a smell in any API. But used to be common. Added because I happened to test a library that had one of these.
+      ;; to quote https://clang.llvm.org/doxygen/classclang_1_1FunctionNoProtoType.html#details 
+      ;; "Represents a K&R-style 'int foo()' function, which has no information available about its arguments." 
+      c/CXType_FunctionNoProto
+      [:coffi.ffi/fn-no-proto
+       []
+       (clang-type->coffi (c/clang_getResultType type))] 
 
       c/CXType_IncompleteArray
       :coffi.mem/pointer
