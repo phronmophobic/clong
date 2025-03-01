@@ -100,6 +100,7 @@
 
         :coffi.ffi/fn Pointer
         ;;com.sun.jna.Callback
+        :coffi.ffi/fn-no-proto Pointer
         
         :coffi.mem/array
         (Class/forName (util/array-type-desc struct-prefix (second t))))
@@ -195,6 +196,15 @@
         (let [->callback
               (callback-maker struct-prefix (nth t 2) (nth t 1))]
           
+          (fn [o]
+            (if (instance? Callback o)
+              o
+              (->callback o))))
+        
+        :coffi.ffi/fn-no-proto
+        (let [->callback
+              (callback-maker struct-prefix (nth t 2) (nth t 1))]
+        
           (fn [o]
             (if (instance? Callback o)
               o
