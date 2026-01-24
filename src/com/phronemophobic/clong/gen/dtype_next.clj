@@ -55,6 +55,10 @@
          (= "clong" (namespace t)))
     (list 'by-value (keyword (name t)))
 
+    (and (vector? t)
+         (= :coffi.mem/array (first t)))
+    :pointer?
+
     :else
     (coffi-type->dtype t)))
 
