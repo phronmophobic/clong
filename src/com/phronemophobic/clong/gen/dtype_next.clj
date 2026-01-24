@@ -128,9 +128,17 @@
   (let [id (-> s :id name keyword)
         fields (into []
                      (map (fn [field]
-                            (let [dtype (-> field
-                                            :datatype
-                                            coffi-type->struct-dtype)]
+                            (let [dtype (try
+                                          (-> field
+                                              :datatype
+                                              coffi-type->struct-dtype)
+                                          (catch Exception e
+                                            (throw
+                                             (ex-info "Error creating field"
+                                                      (assoc (ex-data e)
+                                                             :struct s
+                                                             :field field)
+                                                      e))))]
                               (assoc dtype :name (-> field :name keyword)))))
                      (:fields s))]
     [id fields]))
@@ -164,7 +172,13 @@
   "
   [api]
   (into {}
-        (map clong-fn->dt-type-fn)
+        (map (fn [fspec]
+               (try
+                 (clong-fn->dt-type-fn fspec)
+                 (catch clojure.lang.ExceptionInfo e
+                   (throw (ex-info "Error creating function"
+                                   (assoc (ex-data e)
+                                          :function fspec)))))))
         (:functions api)))
 
 (defn def-enum* [enum]
