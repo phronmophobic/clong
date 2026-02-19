@@ -13,7 +13,7 @@ Writing wrappers for c libraries is tedious and error prone. The goal of clong i
 Leiningen dependency:
 
 ```clojure
-[com.phronemophobic/clong "1.4.3"]
+[com.phronemophobic/clong "1.4.4"]
 ;; only needed for parsing. not needed for generation
 [org.bytedeco/llvm-platform "16.0.4-1.5.9"]
 ```
@@ -21,7 +21,7 @@ Leiningen dependency:
 deps.edn dependency:
 
 ```clojure
-com.phronemophobic/clong {:mvn/version "1.4.3"}
+com.phronemophobic/clong {:mvn/version "1.4.4"}
 ;; only needed for parsing. not needed for generation
 org.bytedeco/llvm-platform {:mvn/version "16.0.4-1.5.9"}
 ```
@@ -133,6 +133,6 @@ Additionally, clong was successfully able to generate a complete wrapper for the
 
 ## License
 
-Copyright © 2022-2024 Adrian
+Copyright © 2022-2026 Adrian
 
 Distributed under the Eclipse Public License version 1.0.
