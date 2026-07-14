@@ -125,8 +125,9 @@
 (defn clang-type->coffi [type]
 
   (let [type (c/clang_getCanonicalType type)]
-    #_(prn (c/clang_getCString
-          (c/clang_getTypeSpelling type)))
+    #_(tap> (c/clang_getCString
+           (c/clang_getTypeSpelling type)))
+    
     (condp = (.kind type)
 
       c/CXType_Void :coffi.mem/void
