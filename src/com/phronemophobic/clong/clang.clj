@@ -112,6 +112,8 @@
 
 (defn coffi-float-type [size]
   (case size
+    ;; adding float16, but not sure what to call it.
+    2 :coffi.mem/float16
     4 :coffi.mem/float
     8 :coffi.mem/double
     16 [:coffi.mem/array :coffi.mem/double 2]))
@@ -155,6 +157,7 @@
       c/CXType_LongLong (coffi-integer-type (c/clang_Type_getSizeOf type))
       c/CXType_Int128 (coffi-integer-type (c/clang_Type_getSizeOf type))
 
+      c/CXType_Float16 (coffi-float-type (c/clang_Type_getSizeOf type))
       c/CXType_Float (coffi-float-type (c/clang_Type_getSizeOf type))
       c/CXType_Double (coffi-float-type (c/clang_Type_getSizeOf type))
       c/CXType_LongDouble (coffi-float-type (c/clang_Type_getSizeOf type))
