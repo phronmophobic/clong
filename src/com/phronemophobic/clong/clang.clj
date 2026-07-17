@@ -463,6 +463,7 @@
         m {:type type-spelling
            :datatype (clang-type->coffi field-type)
            :name spelling
+           ;; :location (get-spelling-extent cur)
            :bitfield? bitfield?
            :calculated-offset (c/clang_Cursor_getOffsetOfField cur)}]
     (if bitfield?
