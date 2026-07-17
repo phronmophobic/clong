@@ -60,7 +60,7 @@
                       c/clang_getRangeStart
                       get-spelling-location)
         end-loc (-> extent
-                    c/clang_getRangeStart
+                    c/clang_getRangeEnd
                     get-spelling-location)]
     {:file (:file start-loc)
      :start start-loc
