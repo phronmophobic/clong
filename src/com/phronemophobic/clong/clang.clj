@@ -112,8 +112,7 @@
 
 (defn coffi-float-type [size]
   (case size
-    ;; adding float16, but not sure what to call it.
-    2 :coffi.mem/float16
+    2 :coffi.mem/half-float
     4 :coffi.mem/float
     8 :coffi.mem/double
     16 [:coffi.mem/array :coffi.mem/double 2]))
