@@ -125,9 +125,9 @@ Additionally, clong was successfully able to generate a complete wrapper for the
 
 - Improve documentation.
 - Add support for #define values.
-- Add generator that supports project panama.
+- [X] Add generator that supports project panama.
 - [X] Add support for other ffi libraries besides jna.
-- [-] Implement clojure data interfaces over structs.
+- [X] Implement clojure data interfaces over structs.
 - [X] Support AOT of wrappers.
 - Document AOT of wrappers.
 
